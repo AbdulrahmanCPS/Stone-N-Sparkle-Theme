@@ -18,4 +18,4 @@ jobs:
           remote_host: "f5c.541.myftpupload.com"
           ssh_user: "git_deployer_d192c4bdf1_972183"
           ssh_private_key: ${{ secrets.PRIVATE_KEY }}
-          deployment_dest: "html/wp-content/themes/theme3/"
+          deployment_dest: "wp-content/themes/theme3/"
