@@ -5,6 +5,13 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-theme3
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,12 +24,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "f5c.541.myftpupload.com" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.GODADDY_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Pre-deploy backup (theme3)
         run: |
           TS=$(date -u +"%Y%m%d-%H%M%S")
-          ssh "git_deployer_d192c4bdf1_972183@f5c.541.myftpupload.com" "\
+          ssh "${{ secrets.GODADDY_USER }}@${{ secrets.GODADDY_HOST }}" "\
             set -e; \
             cd ~/html/wp-content/themes; \
             if [ ! -d theme3 ]; then echo 'theme3 not found at ~/html/wp-content/themes/theme3'; exit 1; fi; \
@@ -36,7 +43,7 @@ jobs:
       - name: Deploy via GoDaddy WordPress Deployer
         uses: godaddy-wordpress/gd-wordpress-deployer@v1
         with:
-          remote_host: "f5c.541.myftpupload.com"
-          ssh_user: "git_deployer_d192c4bdf1_972183"
+          remote_host: ${{ secrets.GODADDY_HOST }}
+          ssh_user: ${{ secrets.GODADDY_USER }}
           ssh_private_key: ${{ secrets.PRIVATE_KEY }}
           deployment_dest: "wp-content/themes/theme3/"
