@@ -21,13 +21,19 @@ jobs:
     steps:
       - name: Setup SSH
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.GODADDY_HOST }}" >> ~/.ssh/known_hosts
+
+          for i in 1 2 3 4 5; do
+            ssh-keyscan -H "${{ secrets.GODADDY_HOST }}" >> ~/.ssh/known_hosts && break
+            sleep 2
+          done
 
       - name: Roll back theme3 from backup
         run: |
+          set -e
           FILE="${{ github.event.inputs.backup_file }}"
           if [ -z "$FILE" ]; then FILE="theme3-latest.tar.gz"; fi
 
