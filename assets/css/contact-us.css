@@ -48,8 +48,21 @@
   text-align: center;
 }
 
+.ss-contact__hero-title{
+  margin: 0;
+  font-family: 'SS Schrifted Serif', serif;
+  font-size: 26px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
 
-
+.ss-contact__hero-subtitle{
+  margin: 10px auto 0;
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
 
 /* SECTION spacing (centered like screenshot) */
 .ss-contact__section{
@@ -70,7 +83,7 @@
 
 .ss-contact__title{
   margin: 0;
-  font-family: 'SS Schrifted Serif', serif;
+  font-family: 'Comic Sans MS', cursive;
   font-size: 28px;
   letter-spacing: 2px;
   text-transform: uppercase;
