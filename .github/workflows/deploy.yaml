@@ -18,6 +18,11 @@ jobs:
     steps:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
+      - name: Preflight DNS
+        run: |
+          echo "Host is: '${{ secrets.GODADDY_HOST }}'"
+          getent hosts "${{ secrets.GODADDY_HOST }}" || true
+          nslookup "${{ secrets.GODADDY_HOST }}" || true
 
       - name: Setup SSH
         run: |
