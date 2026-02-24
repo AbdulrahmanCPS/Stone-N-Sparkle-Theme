@@ -2,8 +2,7 @@ name: Backup + Deploy theme3 to GoDaddy (Managed WP)
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 concurrency:
   group: deploy-theme3
@@ -18,21 +17,28 @@ jobs:
     steps:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
-      - name: Preflight DNS
+
+      - name: Preflight DNS (optional)
         run: |
-          echo "Host is: '${{ secrets.GODADDY_HOST }}'"
           getent hosts "${{ secrets.GODADDY_HOST }}" || true
           nslookup "${{ secrets.GODADDY_HOST }}" || true
 
       - name: Setup SSH
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.GODADDY_HOST }}" >> ~/.ssh/known_hosts
+
+          # Retry keyscan a few times to avoid transient DNS/network issues
+          for i in 1 2 3 4 5; do
+            ssh-keyscan -H "${{ secrets.GODADDY_HOST }}" >> ~/.ssh/known_hosts && break
+            sleep 2
+          done
 
       - name: Pre-deploy backup (theme3)
         run: |
+          set -e
           TS=$(date -u +"%Y%m%d-%H%M%S")
           ssh "${{ secrets.GODADDY_USER }}@${{ secrets.GODADDY_HOST }}" "\
             set -e; \
