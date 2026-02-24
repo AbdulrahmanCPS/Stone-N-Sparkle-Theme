@@ -1,0 +1,38 @@
+name: Rollback theme3 on GoDaddy (Managed WP)
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_file:
+        description: "Backup filename in ~/backups/themes (blank = theme3-latest.tar.gz)"
+        required: false
+        default: "theme3-latest.tar.gz"
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "f5c.541.myftpupload.com" >> ~/.ssh/known_hosts
+
+      - name: Roll back theme3 from backup
+        run: |
+          FILE="${{ github.event.inputs.backup_file }}"
+          ssh "git_deployer_d192c4bdf1_972183@f5c.541.myftpupload.com" "\
+            set -e; \
+            cd ~/html/wp-content/themes; \
+            BK=~/backups/themes/${FILE}; \
+            if [ ! -f \$BK ]; then echo 'Backup not found:' \$BK; echo 'Available backups:'; ls -la ~/backups/themes/ || true; exit 1; fi; \
+            rm -rf theme3_rollback_tmp; \
+            mkdir theme3_rollback_tmp; \
+            tar -xzf \$BK -C theme3_rollback_tmp; \
+            if [ ! -d theme3_rollback_tmp/theme3 ]; then echo 'Backup does not contain theme3 directory'; exit 1; fi; \
+            rm -rf theme3; \
+            mv theme3_rollback_tmp/theme3 theme3; \
+            rm -rf theme3_rollback_tmp; \
+            echo Rolled back using: \$BK \
+          "
