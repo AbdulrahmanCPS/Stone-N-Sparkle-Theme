@@ -8,6 +8,13 @@ on:
         required: false
         default: "theme3-latest.tar.gz"
 
+concurrency:
+  group: deploy-theme3
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   rollback:
     runs-on: ubuntu-latest
@@ -17,12 +24,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "f5c.541.myftpupload.com" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.GODADDY_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Roll back theme3 from backup
         run: |
           FILE="${{ github.event.inputs.backup_file }}"
-          ssh "git_deployer_d192c4bdf1_972183@f5c.541.myftpupload.com" "\
+          if [ -z "$FILE" ]; then FILE="theme3-latest.tar.gz"; fi
+
+          ssh "${{ secrets.GODADDY_USER }}@${{ secrets.GODADDY_HOST }}" "\
             set -e; \
             cd ~/html/wp-content/themes; \
             BK=~/backups/themes/${FILE}; \
