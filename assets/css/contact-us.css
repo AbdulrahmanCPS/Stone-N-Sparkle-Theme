@@ -1,0 +1,261 @@
+/* Contact Us (Unified) – screenshot-matched layout (ACF-driven)
+   Scoped to .ss-contact / .ss-page.ss-contact
+*/
+
+.ss-page.ss-contact,
+.ss-contact{
+  /* warm beige page background like the reference */
+  background: #cdb7ad;
+  color: var(--ss-text);
+}
+
+/* Remove the old constrained wrapper look; let hero go full width */
+.ss-contact__wrap{
+  --ss-contact-section-bg: transparent;
+  --ss-contact-form-bg: transparent;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* HERO: full-width image (no radius/border) */
+.ss-contact__hero{
+  margin: 0;
+}
+
+.ss-contact__hero-inner{
+  display: block;
+}
+
+.ss-contact__hero-media{
+  border-radius: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+}
+
+.ss-contact__hero-img{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* If hero copy exists, keep it subtle (usually empty in your reference) */
+.ss-contact__hero-copy{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px 18px 0;
+  text-align: center;
+}
+
+.ss-contact__hero-title{
+  margin: 0;
+  font-family: 'SS Schrifted Serif', serif;
+  font-size: 26px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.ss-contact__hero-subtitle{
+  margin: 10px auto 0;
+  max-width: 620px;
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+/* SECTION spacing (centered like screenshot) */
+.ss-contact__section{
+  margin: 0;
+  padding: 56px 0 70px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Headings centered */
+.ss-contact__head{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 18px;
+  text-align: center;
+}
+
+.ss-contact__title{
+  margin: 0;
+  font-family: 'SS Schrifted Serif', serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.ss-contact__subtitle{
+  max-width: 620px;
+  margin: 12px auto 0;
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+/* CARDS: centered row with fixed small cards */
+.ss-contact__grid{
+  max-width: 980px;
+  margin: 28px auto 0;
+  padding: 0 18px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.ss-contact__card{
+  width: 170px;
+  min-height: 185px;
+  background: #f3ede9;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.ss-contact__card-ico{
+  width: 56px;
+  height: 56px;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  margin: 0 0 10px;
+}
+
+.ss-contact__card-ico img{
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.ss-contact__card-title{
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.ss-contact__card-text{
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* FORM section tweaks */
+.ss-contact__form{
+  padding-top: 34px;
+  padding-bottom: 90px;
+}
+
+.ss-contact__form-shell{
+  width: 640px;
+  max-width: calc(100% - 36px);
+  margin: 34px auto 0;
+  background: #f7f1ee;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: 0 14px 24px rgba(0,0,0,0.12);
+  padding: 34px 40px 38px;
+  text-align: left;
+}
+
+/* Fluent Forms + CF7: normalize fields so the look matches */
+.ss-contact .ff-el-group,
+.ss-contact .wpcf7 form p{
+  margin: 0 0 14px;
+}
+
+.ss-contact label,
+.ss-contact .ff-el-input--label label{
+  display: block;
+  font-size: 13px;
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.ss-contact input[type="text"],
+.ss-contact input[type="email"],
+.ss-contact input[type="tel"],
+.ss-contact select,
+.ss-contact textarea,
+.ss-contact .ff-el-form-control{
+  width: 100%;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  border-radius: 4px;
+  padding: 13px 14px;
+  font-size: 14px;
+  outline: none;
+  color: #111;
+}
+
+.ss-contact textarea{
+  min-height: 140px;
+  resize: vertical;
+}
+
+.ss-contact .ff-btn,
+.ss-contact input[type="submit"],
+.ss-contact button,
+.ss-contact .wpcf7-submit{
+  display: block;
+  margin: 18px auto 0;
+  width: 180px;
+  height: 40px;
+  border: 0;
+  border-radius: 4px;
+  background: #111;
+  color: #fff;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+  cursor: pointer;
+}
+
+.ss-contact .wpcf7-response-output{
+  margin: 16px 0 0;
+  font-size: 12px;
+}
+
+/* If any phone plugin injects an extra country selector (e.g. intl-tel-input),
+   hide ONLY the injected flag dropdown so you keep your manual country-code select. */
+.ss-contact .iti__flag-container,
+.ss-contact .iti__selected-flag,
+.ss-contact .iti__country-list{
+  display: none !important;
+}
+
+/* Ensure the phone field padding stays consistent if a plugin adds left padding */
+.ss-contact .iti input[type="tel"],
+.ss-contact input[type="tel"]{
+  padding-left: 14px !important;
+}
+
+/* Country + phone injected row (keep consistent spacing) */
+.ss-contact__phone-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 600px){
+  .ss-contact__phone-row{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px){
+  .ss-contact__form-shell{
+    padding: 24px 18px 26px;
+  }
+}

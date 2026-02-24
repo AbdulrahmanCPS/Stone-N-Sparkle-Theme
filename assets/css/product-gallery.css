@@ -1,0 +1,101 @@
+/* Stone & Sparkle – Product Gallery (Single Product) */
+
+.ss-product-gallery{
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+  max-width: 100%;
+}
+
+.ss-product-thumbs{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  width: 76px;
+}
+
+.ss-thumb-btn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  padding:0;
+  border-radius:10px;
+  width:72px;
+  height:72px;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.ss-thumb-btn.is-active{
+  border-color: rgba(255,255,255,0.65);
+}
+
+.ss-thumb-btn img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.ss-product-stage{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+
+.ss-stage-viewport{
+  width:576px;
+  height:576px;
+  overflow:hidden;
+  position:relative;
+  border-radius:18px;
+}
+
+.ss-stage-image{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  transform-origin:0 0;
+  user-select:none;
+  -webkit-user-drag:none;
+  cursor:crosshair;
+  display:block;
+  transition: transform 0.1s ease;
+  pointer-events:none;
+}
+
+.ss-stage-image.is-zoomed{ cursor:crosshair; }
+
+/* Nav buttons — positioned relative to .ss-stage-viewport */
+.ss-stage-viewport{
+  position:relative; /* already set above but ensure buttons anchor to this */
+}
+
+.ss-gallery-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.55);
+  background: rgba(0,0,0,0.35);
+  color:#fff;
+  font-size:26px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:20;
+}
+
+.ss-gallery-prev{ left:12px; }
+.ss-gallery-next{ right:12px; }
+
+@media (max-width: 768px){
+  .ss-product-gallery{ flex-direction:column; }
+  .ss-product-thumbs{ flex-direction:row; width:auto; order:2; }
+  .ss-thumb-btn{ width:64px; height:64px; }
+  .ss-stage-viewport{ width:min(576px, 100%); height:auto; aspect-ratio:1/1; }
+}

@@ -1,0 +1,257 @@
+{
+  "key": "group_ss_popup_settings",
+  "title": "Popup Settings",
+  "fields": [
+    {
+      "key": "field_ss_popup_enabled",
+      "label": "popup_enabled",
+      "name": "popup_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field_ss_popup_title",
+      "label": "popup_title",
+      "name": "popup_title",
+      "type": "text"
+    },
+    {
+      "key": "field_ss_popup_body",
+      "label": "popup_body",
+      "name": "popup_body",
+      "type": "wysiwyg",
+      "tabs": "all",
+      "toolbar": "basic",
+      "media_upload": 0
+    },
+    {
+      "key": "field_ss_popup_trigger",
+      "label": "popup_trigger",
+      "name": "popup_trigger",
+      "type": "select",
+      "choices": {
+        "on_load": "on_load",
+        "on_scroll": "on_scroll"
+      },
+      "default_value": "on_load",
+      "ui": 1
+    },
+    {
+      "key": "field_ss_popup_delay_seconds",
+      "label": "popup_delay_seconds",
+      "name": "popup_delay_seconds",
+      "type": "number",
+      "min": 0,
+      "step": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field_ss_popup_frequency_days",
+      "label": "popup_frequency_days",
+      "name": "popup_frequency_days",
+      "type": "number",
+      "min": 0,
+      "step": 1,
+      "default_value": 0
+    },
+
+    {
+      "key": "field_ss_email_enabled",
+      "label": "email_enabled",
+      "name": "email_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    },
+    {
+      "key": "field_ss_email_label",
+      "label": "email_label",
+      "name": "email_label",
+      "type": "text",
+      "default_value": "Email"
+    },
+    {
+      "key": "field_ss_email_placeholder",
+      "label": "email_placeholder",
+      "name": "email_placeholder",
+      "type": "text",
+      "default_value": "Enter your email"
+    },
+    {
+      "key": "field_ss_email_required",
+      "label": "email_required",
+      "name": "email_required",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    },
+
+    {
+      "key": "field_ss_first_name_enabled",
+      "label": "first_name_enabled",
+      "name": "first_name_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    },
+    {
+      "key": "field_ss_first_name_label",
+      "label": "first_name_label",
+      "name": "first_name_label",
+      "type": "text",
+      "default_value": "First name"
+    },
+    {
+      "key": "field_ss_first_name_placeholder",
+      "label": "first_name_placeholder",
+      "name": "first_name_placeholder",
+      "type": "text",
+      "default_value": "Enter your first name"
+    },
+    {
+      "key": "field_ss_first_name_required",
+      "label": "first_name_required",
+      "name": "first_name_required",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+
+    {
+      "key": "field_ss_last_name_enabled",
+      "label": "last_name_enabled",
+      "name": "last_name_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field_ss_last_name_label",
+      "label": "last_name_label",
+      "name": "last_name_label",
+      "type": "text",
+      "default_value": "Last name"
+    },
+    {
+      "key": "field_ss_last_name_placeholder",
+      "label": "last_name_placeholder",
+      "name": "last_name_placeholder",
+      "type": "text",
+      "default_value": "Enter your last name"
+    },
+    {
+      "key": "field_ss_last_name_required",
+      "label": "last_name_required",
+      "name": "last_name_required",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+
+    {
+      "key": "field_ss_phone_enabled",
+      "label": "phone_enabled",
+      "name": "phone_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field_ss_phone_label",
+      "label": "phone_label",
+      "name": "phone_label",
+      "type": "text",
+      "default_value": "Phone"
+    },
+    {
+      "key": "field_ss_phone_placeholder",
+      "label": "phone_placeholder",
+      "name": "phone_placeholder",
+      "type": "text",
+      "default_value": "05x xxx xxxx"
+    },
+    {
+      "key": "field_ss_phone_required",
+      "label": "phone_required",
+      "name": "phone_required",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+
+    {
+      "key": "field_ss_extra_enabled",
+      "label": "extra_enabled",
+      "name": "extra_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field_ss_extra_label",
+      "label": "extra_label",
+      "name": "extra_label",
+      "type": "text",
+      "default_value": "I’m interested in"
+    },
+    {
+      "key": "field_ss_extra_required",
+      "label": "extra_required",
+      "name": "extra_required",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 0
+    },
+    {
+      "key": "field_ss_extra_option_rings_enabled",
+      "label": "extra_option_rings_enabled",
+      "name": "extra_option_rings_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    },
+    {
+      "key": "field_ss_extra_option_earrings_enabled",
+      "label": "extra_option_earrings_enabled",
+      "name": "extra_option_earrings_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    },
+    {
+      "key": "field_ss_extra_option_necklaces_enabled",
+      "label": "extra_option_necklaces_enabled",
+      "name": "extra_option_necklaces_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    },
+    {
+      "key": "field_ss_extra_option_bracelets_enabled",
+      "label": "extra_option_bracelets_enabled",
+      "name": "extra_option_bracelets_enabled",
+      "type": "true_false",
+      "ui": 1,
+      "default_value": 1
+    }
+  ],
+  "location": [
+    [
+      {
+        "param": "options_page",
+        "operator": "==",
+        "value": "ss-popup-settings"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "modified": 1700000000
+}

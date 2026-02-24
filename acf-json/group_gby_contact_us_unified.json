@@ -1,0 +1,69 @@
+{
+  "key": "group_gby_contact_us_unified",
+  "title": "GBY \u2013 Contact Us Unified",
+  "fields": [
+    {"key":"field_cu_page_enabled","label":"cu_page_enabled","name":"cu_page_enabled","type":"true_false","ui":1,"default_value":1},
+
+    {"key":"field_cu_hero_enabled","label":"cu_hero_enabled","name":"cu_hero_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_hero_image","label":"cu_hero_image","name":"cu_hero_image","type":"image","return_format":"array","preview_size":"medium","library":"all"},
+    {"key":"field_cu_hero_title","label":"cu_hero_title","name":"cu_hero_title","type":"text"},
+    {"key":"field_cu_hero_subtitle","label":"cu_hero_subtitle","name":"cu_hero_subtitle","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_info_enabled","label":"cu_info_enabled","name":"cu_info_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_info_title","label":"cu_info_title","name":"cu_info_title","type":"text"},
+    {"key":"field_cu_info_subtitle","label":"cu_info_subtitle","name":"cu_info_subtitle","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_card1_enabled","label":"cu_card1_enabled","name":"cu_card1_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_card1_icon","label":"cu_card1_icon","name":"cu_card1_icon","type":"image","return_format":"array","preview_size":"thumbnail","library":"all"},
+    {"key":"field_cu_card1_title","label":"cu_card1_title","name":"cu_card1_title","type":"text"},
+    {"key":"field_cu_card1_text","label":"cu_card1_text","name":"cu_card1_text","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_card2_enabled","label":"cu_card2_enabled","name":"cu_card2_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_card2_icon","label":"cu_card2_icon","name":"cu_card2_icon","type":"image","return_format":"array","preview_size":"thumbnail","library":"all"},
+    {"key":"field_cu_card2_title","label":"cu_card2_title","name":"cu_card2_title","type":"text"},
+    {"key":"field_cu_card2_text","label":"cu_card2_text","name":"cu_card2_text","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_card3_enabled","label":"cu_card3_enabled","name":"cu_card3_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_card3_icon","label":"cu_card3_icon","name":"cu_card3_icon","type":"image","return_format":"array","preview_size":"thumbnail","library":"all"},
+    {"key":"field_cu_card3_title","label":"cu_card3_title","name":"cu_card3_title","type":"text"},
+    {"key":"field_cu_card3_text","label":"cu_card3_text","name":"cu_card3_text","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_card4_enabled","label":"cu_card4_enabled","name":"cu_card4_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_card4_icon","label":"cu_card4_icon","name":"cu_card4_icon","type":"image","return_format":"array","preview_size":"thumbnail","library":"all"},
+    {"key":"field_cu_card4_title","label":"cu_card4_title","name":"cu_card4_title","type":"text"},
+    {"key":"field_cu_card4_text","label":"cu_card4_text","name":"cu_card4_text","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_form_enabled","label":"cu_form_enabled","name":"cu_form_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_form_title","label":"cu_form_title","name":"cu_form_title","type":"text"},
+    {"key":"field_cu_form_subtitle","label":"cu_form_subtitle","name":"cu_form_subtitle","type":"textarea","new_lines":"br"},
+
+    {"key":"field_cu_use_fluent_form","label":"cu_use_fluent_form","name":"cu_use_fluent_form","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_fluent_form_id","label":"cu_fluent_form_id","name":"cu_fluent_form_id","type":"number"},
+    {"key":"field_cu_form_shortcode_fallback","label":"cu_form_shortcode_fallback","name":"cu_form_shortcode_fallback","type":"text"},
+
+    {"key":"field_cu_phone_country_enabled","label":"cu_phone_country_enabled","name":"cu_phone_country_enabled","type":"true_false","ui":1,"default_value":1},
+    {"key":"field_cu_phone_country_label","label":"cu_phone_country_label","name":"cu_phone_country_label","type":"text","default_value":"Country"},
+    {"key":"field_cu_phone_country_required","label":"cu_phone_country_required","name":"cu_phone_country_required","type":"true_false","ui":1,"default_value":1},
+
+    {"key":"field_cu_section_bg_color","label":"cu_section_bg_color","name":"cu_section_bg_color","type":"text"},
+    {"key":"field_cu_form_bg_color","label":"cu_form_bg_color","name":"cu_form_bg_color","type":"text"}
+  ],
+  "location": [
+    [
+      {
+        "param": "page_template",
+        "operator": "==",
+        "value": "page-contact-us.php"
+      }
+    ]
+  ],
+  "menu_order": 0,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "hide_on_screen": "",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0
+}
