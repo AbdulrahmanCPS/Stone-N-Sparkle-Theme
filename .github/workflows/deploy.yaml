@@ -1,4 +1,4 @@
-name: Deploy theme3 to GoDaddy (Managed WP)
+name: Backup + Deploy theme3 to GoDaddy (Managed WP)
 
 on:
   push:
@@ -11,6 +11,27 @@ jobs:
     steps:
       - name: Checkout Repository Code
         uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "f5c.541.myftpupload.com" >> ~/.ssh/known_hosts
+
+      - name: Pre-deploy backup (theme3)
+        run: |
+          TS=$(date -u +"%Y%m%d-%H%M%S")
+          ssh "git_deployer_d192c4bdf1_972183@f5c.541.myftpupload.com" "\
+            set -e; \
+            cd ~/html/wp-content/themes; \
+            if [ ! -d theme3 ]; then echo 'theme3 not found at ~/html/wp-content/themes/theme3'; exit 1; fi; \
+            mkdir -p ~/backups/themes; \
+            tar -czf ~/backups/themes/theme3-${TS}.tar.gz theme3; \
+            ln -sfn ~/backups/themes/theme3-${TS}.tar.gz ~/backups/themes/theme3-latest.tar.gz; \
+            ls -1t ~/backups/themes/theme3-*.tar.gz | tail -n +11 | xargs -r rm -f; \
+            echo Backup created: ~/backups/themes/theme3-${TS}.tar.gz \
+          "
 
       - name: Deploy via GoDaddy WordPress Deployer
         uses: godaddy-wordpress/gd-wordpress-deployer@v1
