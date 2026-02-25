@@ -1643,6 +1643,7 @@ $fields[] = array(
         'default_value' => '© {year} {site}. All rights reserved.',
     );
 
+    $footer_page_id = ss_footer_settings_page_id();
     acf_add_local_field_group(array(
         'key' => 'group_ss_footer_settings',
         'title' => 'Footer Settings',
@@ -1652,7 +1653,7 @@ $fields[] = array(
                 array('param' => 'options_page', 'operator' => '==', 'value' => 'ss-footer-settings'),
             ),
             array(
-                array('param' => 'page', 'operator' => '==', 'value' => '402'),
+                array('param' => 'page', 'operator' => '==', 'value' => (string) $footer_page_id),
             ),
         ),
         'menu_order' => 0,
@@ -1665,7 +1666,6 @@ $fields[] = array(
     ));
 
     // Footer Newsletter: ACF Free compatible (no accordion). Shows on the same page as Footer settings.
-    $footer_page_id = ss_footer_settings_page_id();
     acf_add_local_field_group(array(
         'key' => 'group_ss_footer_newsletter',
         'title' => 'Footer Newsletter',
