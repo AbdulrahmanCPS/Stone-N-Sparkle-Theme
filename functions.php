@@ -1309,11 +1309,23 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
  * ========================================================= */
 
 /**
- * Change this if you move the Footer Settings page.
- * You can also override via the filter 'ss_footer_settings_page_id'.
+ * Resolve the Footer Settings page ID (where ACF footer fields are edited).
+ * Tries page title "Footer settings" or slug "footer-settings" so the theme
+ * group appears on the same page as your existing "Footer settings" field group (ACF Free).
+ * You can override via the filter 'ss_footer_settings_page_id'.
  */
 function ss_footer_settings_page_id() {
-    $default_id = 402; // matches your current ACF location rule
+    $default_id = 402;
+    foreach (array('Footer settings', 'Footer Settings') as $title) {
+        $page = get_page_by_title($title, OBJECT, 'page');
+        if ($page && $page->ID) {
+            return (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+        }
+    }
+    $page = get_page_by_path('footer-settings', OBJECT, 'page');
+    if ($page && $page->ID) {
+        return (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+    }
     return (int) apply_filters('ss_footer_settings_page_id', $default_id);
 }
 
@@ -1592,60 +1604,7 @@ $fields[] = array(
         );
     }
 
-    // Newsletter
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_accordion',
-        'label' => 'Newsletter Section',
-        'name' => '',
-        'type' => 'accordion',
-        'open' => 0,
-        'multi_expand' => 0,
-        'endpoint' => 0,
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_enabled',
-        'label' => 'footer_newsletter_enabled',
-        'name' => 'footer_newsletter_enabled',
-        'type' => 'true_false',
-        'ui' => 1,
-        'default_value' => 1,
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_title',
-        'label' => 'footer_newsletter_title',
-        'name' => 'footer_newsletter_title',
-        'type' => 'text',
-        'default_value' => 'Newsletter',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_subtitle',
-        'label' => 'footer_newsletter_subtitle',
-        'name' => 'footer_newsletter_subtitle',
-        'type' => 'textarea',
-        'new_lines' => 'br',
-        'default_value' => 'Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_placeholder',
-        'label' => 'footer_newsletter_placeholder',
-        'name' => 'footer_newsletter_placeholder',
-        'type' => 'text',
-        'default_value' => 'Enter your email',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_button_text',
-        'label' => 'footer_newsletter_button_text',
-        'name' => 'footer_newsletter_button_text',
-        'type' => 'text',
-        'default_value' => 'Join',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_accordion_end',
-        'label' => 'Newsletter Section End',
-        'name' => '',
-        'type' => 'accordion',
-        'endpoint' => 1,
-    );
+    // Newsletter fields live in a separate group (Footer Newsletter) so they show in ACF Free on the same page as Footer settings.
 
     // Copyright
     $fields[] = array(
@@ -1678,6 +1637,76 @@ $fields[] = array(
             ),
         ),
         'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'active' => true,
+        'show_in_rest' => 0,
+    ));
+
+    // Footer Newsletter: ACF Free compatible (no accordion). Shows on the same page as Footer settings.
+    $footer_page_id = ss_footer_settings_page_id();
+    acf_add_local_field_group(array(
+        'key' => 'group_ss_footer_newsletter',
+        'title' => 'Footer Newsletter',
+        'fields' => array(
+            array(
+                'key' => 'field_ss_footer_newsletter_message',
+                'label' => 'Newsletter section',
+                'name' => '',
+                'type' => 'message',
+                'message' => 'Visibility and text for the newsletter block in the footer.',
+            ),
+            array(
+                'key' => 'field_ss_footer_newsletter_enabled',
+                'label' => 'Show newsletter section',
+                'name' => 'footer_newsletter_enabled',
+                'type' => 'true_false',
+                'ui' => 1,
+                'default_value' => 1,
+                'instructions' => 'Show or hide the newsletter block in the footer.',
+            ),
+            array(
+                'key' => 'field_ss_footer_newsletter_title',
+                'label' => 'Newsletter title',
+                'name' => 'footer_newsletter_title',
+                'type' => 'text',
+                'default_value' => 'Newsletter',
+            ),
+            array(
+                'key' => 'field_ss_footer_newsletter_subtitle',
+                'label' => 'Newsletter subtitle',
+                'name' => 'footer_newsletter_subtitle',
+                'type' => 'textarea',
+                'new_lines' => 'br',
+                'default_value' => 'Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.',
+                'instructions' => 'Text below the title (the paragraph in the newsletter block).',
+            ),
+            array(
+                'key' => 'field_ss_footer_newsletter_placeholder',
+                'label' => 'Email placeholder',
+                'name' => 'footer_newsletter_placeholder',
+                'type' => 'text',
+                'default_value' => 'Enter your email',
+            ),
+            array(
+                'key' => 'field_ss_footer_newsletter_button_text',
+                'label' => 'Button text',
+                'name' => 'footer_newsletter_button_text',
+                'type' => 'text',
+                'default_value' => 'Join',
+            ),
+        ),
+        'location' => array(
+            array(
+                array('param' => 'options_page', 'operator' => '==', 'value' => 'ss-footer-settings'),
+            ),
+            array(
+                array('param' => 'page', 'operator' => '==', 'value' => (string) $footer_page_id),
+            ),
+        ),
+        'menu_order' => 1,
         'position' => 'normal',
         'style' => 'default',
         'label_placement' => 'top',
