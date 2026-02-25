@@ -257,6 +257,43 @@ $copyright_text    = str_replace(
 
     </div>
 
+    <?php
+    $newsletter_enabled     = (bool) ss_footer_get_field('footer_newsletter_enabled', 1);
+    $newsletter_title       = (string) ss_footer_get_field('footer_newsletter_title', 'Newsletter');
+    $newsletter_subtitle    = (string) ss_footer_get_field('footer_newsletter_subtitle', 'Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.');
+    $newsletter_placeholder = (string) ss_footer_get_field('footer_newsletter_placeholder', 'Enter your email');
+    $newsletter_btn_text    = (string) ss_footer_get_field('footer_newsletter_button_text', 'Join');
+    ?>
+
+    <?php if ($newsletter_enabled): ?>
+      <div class="ss-footer-newsletter">
+        <?php if (trim($newsletter_title) !== ''): ?>
+          <h4 class="ss-footer-newsletter__title"><?php echo esc_html($newsletter_title); ?></h4>
+        <?php endif; ?>
+
+        <?php if (trim($newsletter_subtitle) !== ''): ?>
+          <p class="ss-footer-newsletter__subtitle"><?php echo wp_kses_post($newsletter_subtitle); ?></p>
+        <?php endif; ?>
+
+        <form class="ss-footer-newsletter__form" method="post" action="<?php echo esc_url(home_url('/?na=s')); ?>" novalidate>
+          <input type="hidden" name="nr" value="footer-newsletter" />
+          <div class="ss-footer-newsletter__row">
+            <input
+              type="email"
+              name="ne"
+              class="ss-footer-newsletter__input"
+              placeholder="<?php echo esc_attr($newsletter_placeholder); ?>"
+              autocomplete="email"
+              required
+            />
+            <button type="submit" class="ss-footer-newsletter__btn">
+              <?php echo esc_html($newsletter_btn_text); ?>
+            </button>
+          </div>
+        </form>
+      </div>
+    <?php endif; ?>
+
     <?php if ($copyright_enabled && $copyright_text !== ''): ?>
       <div class="ss-footer-bottom">
         <div><?php echo esc_html($copyright_text); ?></div>
