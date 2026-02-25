@@ -1341,23 +1341,42 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
 
 /**
  * Resolve the Footer Settings page ID (where ACF footer fields are edited).
- * Tries page title "Footer settings" or slug "footer-settings" so the theme
- * group appears on the same page as your existing "Footer settings" field group (ACF Free).
+ * Result is memoized for the request to avoid repeated DB lookups.
+ * Resolution order: slug "footer-settings" (stable), then page ID 402 if published, then title match (published only).
  * You can override via the filter 'ss_footer_settings_page_id'.
  */
 function ss_footer_settings_page_id() {
+    static $resolved_id = null;
+    if ($resolved_id !== null) {
+        return $resolved_id;
+    }
+
     $default_id = 402;
+
+    // Prefer stable identifiers first (slug is unique; ID is explicit).
+    $page = get_page_by_path('footer-settings', OBJECT, 'page');
+    if ($page && $page->ID && get_post_status($page) === 'publish') {
+        $resolved_id = (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+        return $resolved_id;
+    }
+
+    $page_402 = get_post($default_id);
+    if ($page_402 && $page_402->post_type === 'page' && get_post_status($page_402) === 'publish') {
+        $resolved_id = (int) apply_filters('ss_footer_settings_page_id', $default_id);
+        return $resolved_id;
+    }
+
+    // Fallback: title match (published only; avoid drafts/trash).
     foreach (array('Footer settings', 'Footer Settings') as $title) {
         $page = get_page_by_title($title, OBJECT, 'page');
-        if ($page && $page->ID) {
-            return (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+        if ($page && $page->ID && get_post_status($page) === 'publish') {
+            $resolved_id = (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+            return $resolved_id;
         }
     }
-    $page = get_page_by_path('footer-settings', OBJECT, 'page');
-    if ($page && $page->ID) {
-        return (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
-    }
-    return (int) apply_filters('ss_footer_settings_page_id', $default_id);
+
+    $resolved_id = (int) apply_filters('ss_footer_settings_page_id', $default_id);
+    return $resolved_id;
 }
 
 /**
@@ -1635,62 +1654,7 @@ $fields[] = array(
         );
     }
 
-    // Newsletter (visibility + subtitle editable on Footer Settings / page 402)
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_accordion',
-        'label' => 'Newsletter Section',
-        'name' => '',
-        'type' => 'accordion',
-        'open' => 0,
-        'multi_expand' => 0,
-        'endpoint' => 0,
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_enabled',
-        'label' => 'Show newsletter section',
-        'name' => 'footer_newsletter_enabled',
-        'type' => 'true_false',
-        'ui' => 1,
-        'default_value' => 1,
-        'instructions' => 'Show or hide the newsletter block in the footer.',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_title',
-        'label' => 'Newsletter title',
-        'name' => 'footer_newsletter_title',
-        'type' => 'text',
-        'default_value' => 'Newsletter',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_subtitle',
-        'label' => 'Newsletter subtitle',
-        'name' => 'footer_newsletter_subtitle',
-        'type' => 'textarea',
-        'new_lines' => 'br',
-        'default_value' => 'Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.',
-        'instructions' => 'Text shown below the title (e.g. "Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.").',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_placeholder',
-        'label' => 'footer_newsletter_placeholder',
-        'name' => 'footer_newsletter_placeholder',
-        'type' => 'text',
-        'default_value' => 'Enter your email',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_button_text',
-        'label' => 'footer_newsletter_button_text',
-        'name' => 'footer_newsletter_button_text',
-        'type' => 'text',
-        'default_value' => 'Join',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_newsletter_accordion_end',
-        'label' => 'Newsletter Section End',
-        'name' => '',
-        'type' => 'accordion',
-        'endpoint' => 1,
-    );
+    // Newsletter: visibility, title, subtitle, etc. are in the "Footer Newsletter" group below (ACF Free compatible).
 
     // Copyright
     $fields[] = array(
@@ -1710,6 +1674,7 @@ $fields[] = array(
         'default_value' => '© {year} {site}. All rights reserved.',
     );
 
+    $footer_page_id = ss_footer_settings_page_id();
     acf_add_local_field_group(array(
         'key' => 'group_ss_footer_settings',
         'title' => 'Footer Settings',
@@ -1719,7 +1684,7 @@ $fields[] = array(
                 array('param' => 'options_page', 'operator' => '==', 'value' => 'ss-footer-settings'),
             ),
             array(
-                array('param' => 'page', 'operator' => '==', 'value' => '402'),
+                array('param' => 'page', 'operator' => '==', 'value' => (string) $footer_page_id),
             ),
         ),
         'menu_order' => 0,
@@ -1732,7 +1697,6 @@ $fields[] = array(
     ));
 
     // Footer Newsletter: ACF Free compatible (no accordion). Shows on the same page as Footer settings.
-    $footer_page_id = ss_footer_settings_page_id();
     acf_add_local_field_group(array(
         'key' => 'group_ss_footer_newsletter',
         'title' => 'Footer Newsletter',
