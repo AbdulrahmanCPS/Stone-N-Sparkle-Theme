@@ -1310,23 +1310,42 @@ add_filter('woocommerce_add_to_cart_fragments', function ($fragments) {
 
 /**
  * Resolve the Footer Settings page ID (where ACF footer fields are edited).
- * Tries page title "Footer settings" or slug "footer-settings" so the theme
- * group appears on the same page as your existing "Footer settings" field group (ACF Free).
+ * Result is memoized for the request to avoid repeated DB lookups.
+ * Resolution order: slug "footer-settings" (stable), then page ID 402 if published, then title match (published only).
  * You can override via the filter 'ss_footer_settings_page_id'.
  */
 function ss_footer_settings_page_id() {
+    static $resolved_id = null;
+    if ($resolved_id !== null) {
+        return $resolved_id;
+    }
+
     $default_id = 402;
+
+    // Prefer stable identifiers first (slug is unique; ID is explicit).
+    $page = get_page_by_path('footer-settings', OBJECT, 'page');
+    if ($page && $page->ID && get_post_status($page) === 'publish') {
+        $resolved_id = (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+        return $resolved_id;
+    }
+
+    $page_402 = get_post($default_id);
+    if ($page_402 && $page_402->post_type === 'page' && get_post_status($page_402) === 'publish') {
+        $resolved_id = (int) apply_filters('ss_footer_settings_page_id', $default_id);
+        return $resolved_id;
+    }
+
+    // Fallback: title match (published only; avoid drafts/trash).
     foreach (array('Footer settings', 'Footer Settings') as $title) {
         $page = get_page_by_title($title, OBJECT, 'page');
-        if ($page && $page->ID) {
-            return (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+        if ($page && $page->ID && get_post_status($page) === 'publish') {
+            $resolved_id = (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
+            return $resolved_id;
         }
     }
-    $page = get_page_by_path('footer-settings', OBJECT, 'page');
-    if ($page && $page->ID) {
-        return (int) apply_filters('ss_footer_settings_page_id', (int) $page->ID);
-    }
-    return (int) apply_filters('ss_footer_settings_page_id', $default_id);
+
+    $resolved_id = (int) apply_filters('ss_footer_settings_page_id', $default_id);
+    return $resolved_id;
 }
 
 /**
@@ -1604,7 +1623,7 @@ $fields[] = array(
         );
     }
 
-    // Newsletter fields live in a separate group (Footer Newsletter) so they show in ACF Free on the same page as Footer settings.
+    // Newsletter: visibility, title, subtitle, etc. are in the "Footer Newsletter" group below (ACF Free compatible).
 
     // Copyright
     $fields[] = array(
