@@ -280,3 +280,21 @@
     });
   }
 })();
+
+/**
+ * My Account: logout link requires confirmation before redirecting.
+ * Prevents accidental instant logout; presents as a button in the nav.
+ */
+(function(){
+  const nav = document.querySelector('.woocommerce-MyAccount-navigation');
+  if (!nav) return;
+  const logoutLink = nav.querySelector('.woocommerce-MyAccount-navigation-link--customer-logout a');
+  if (!logoutLink) return;
+
+  logoutLink.addEventListener('click', function(e){
+    e.preventDefault();
+    if (window.confirm('Are you sure you want to log out?')) {
+      window.location.href = logoutLink.getAttribute('href') || logoutLink.href;
+    }
+  });
+})();

@@ -97,6 +97,37 @@ add_action('wp', function () {
 // Remove related products from single product pages
 remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20);
 
+/**
+ * WooCommerce My Account: simplify menu (remove Dashboard and Downloads).
+ * Redirect dashboard to Orders so users land on a useful endpoint.
+ */
+add_filter('woocommerce_account_menu_items', function ($items) {
+    unset($items['dashboard']);
+    unset($items['downloads']);
+    return $items;
+}, 20);
+
+add_filter('woocommerce_login_redirect', function ($redirect, $user) {
+    $orders_url = wc_get_account_endpoint_url('orders', '', wc_get_page_permalink('myaccount'));
+    return $orders_url ? $orders_url : $redirect;
+}, 10, 2);
+
+add_action('template_redirect', function () {
+    if (!function_exists('is_account_page') || !is_account_page()) {
+        return;
+    }
+    $wc = function_exists('WC') ? WC() : null;
+    if (!$wc || !isset($wc->query)) {
+        return;
+    }
+    if (empty($wc->query->get_current_endpoint())) {
+        $orders_url = wc_get_account_endpoint_url('orders', '', wc_get_page_permalink('myaccount'));
+        if ($orders_url) {
+            wp_safe_redirect($orders_url);
+            exit;
+        }
+    }
+});
 
 /**
  * Popup Settings context for ACF Free (page-bound) or ACF Pro (options).
@@ -1592,7 +1623,7 @@ $fields[] = array(
         );
     }
 
-    // Newsletter
+    // Newsletter (visibility + subtitle editable on Footer Settings / page 402)
     $fields[] = array(
         'key' => 'field_ss_footer_newsletter_accordion',
         'label' => 'Newsletter Section',
@@ -1604,26 +1635,28 @@ $fields[] = array(
     );
     $fields[] = array(
         'key' => 'field_ss_footer_newsletter_enabled',
-        'label' => 'footer_newsletter_enabled',
+        'label' => 'Show newsletter section',
         'name' => 'footer_newsletter_enabled',
         'type' => 'true_false',
         'ui' => 1,
         'default_value' => 1,
+        'instructions' => 'Show or hide the newsletter block in the footer.',
     );
     $fields[] = array(
         'key' => 'field_ss_footer_newsletter_title',
-        'label' => 'footer_newsletter_title',
+        'label' => 'Newsletter title',
         'name' => 'footer_newsletter_title',
         'type' => 'text',
         'default_value' => 'Newsletter',
     );
     $fields[] = array(
         'key' => 'field_ss_footer_newsletter_subtitle',
-        'label' => 'footer_newsletter_subtitle',
+        'label' => 'Newsletter subtitle',
         'name' => 'footer_newsletter_subtitle',
         'type' => 'textarea',
         'new_lines' => 'br',
         'default_value' => 'Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.',
+        'instructions' => 'Text shown below the title (e.g. "Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.").',
     );
     $fields[] = array(
         'key' => 'field_ss_footer_newsletter_placeholder',
