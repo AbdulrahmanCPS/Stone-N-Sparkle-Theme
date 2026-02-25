@@ -169,6 +169,69 @@
 })();
 
 /**
+ * Footer Newsletter: AJAX submission
+ * Submits via fetch so the page never refreshes and the user stays in place.
+ * Falls back to normal POST if fetch is unavailable.
+ */
+(function(){
+  var form = document.querySelector('.ss-footer-newsletter__form');
+  if (!form) return;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var input = form.querySelector('.ss-footer-newsletter__input');
+    var btn   = form.querySelector('.ss-footer-newsletter__btn');
+    var email = input ? input.value.trim() : '';
+
+    if (!email) {
+      if (input) input.focus();
+      return;
+    }
+
+    var savedText = btn ? btn.textContent : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '…';
+    }
+
+    var body = new FormData(form);
+
+    fetch(form.action, {
+      method: 'POST',
+      body: body,
+    })
+    .then(function() {
+      showMsg(form, 'Thank you for subscribing!', 'success');
+      if (input) input.value = '';
+    })
+    .catch(function() {
+      showMsg(form, 'Something went wrong. Please try again.', 'error');
+    })
+    .finally(function() {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = savedText;
+      }
+    });
+  });
+
+  function showMsg(form, text, type) {
+    var prev = form.querySelector('.ss-footer-newsletter__msg');
+    if (prev) prev.remove();
+
+    var el = document.createElement('p');
+    el.className = 'ss-footer-newsletter__msg ss-footer-newsletter__msg--' + type;
+    el.textContent = text;
+    form.appendChild(el);
+
+    setTimeout(function() {
+      if (el.parentNode) el.remove();
+    }, 5000);
+  }
+})();
+
+/**
  * WooCommerce: Add-to-cart toast
  * - Replaces the default top notice bar with a small popup.
  * - Uses Woo's jQuery event: `added_to_cart`.

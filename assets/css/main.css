@@ -648,6 +648,23 @@ html.ss-no-scroll body{ overflow:hidden; }
   filter: brightness(0.96);
   transform: translateY(-1px);
 }
+.ss-footer-newsletter__btn:disabled{
+  opacity: 0.65;
+  cursor: default;
+  transform: none;
+}
+.ss-footer-newsletter__msg{
+  margin: 12px auto 0;
+  font-size: 13px;
+  line-height: 1.4;
+  max-width: 440px;
+}
+.ss-footer-newsletter__msg--success{
+  color: rgba(255,238,219,0.95);
+}
+.ss-footer-newsletter__msg--error{
+  color: #ff9b9b;
+}
 
 @media (max-width: 480px){
   .ss-footer-newsletter__row{
