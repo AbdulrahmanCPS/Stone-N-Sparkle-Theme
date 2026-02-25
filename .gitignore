@@ -1,0 +1,57 @@
+# Stone-N-Sparkle theme .gitignore — aligns with CONTRIBUTING.md file hygiene
+
+# WordPress / environment (never commit)
+wp-config.php
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Backups and exports
+*.wpress
+*.sql
+*.sql.gz
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+backups/
+
+# Media (full site repo would ignore; theme-only repo typically has no uploads)
+# wp-content/uploads/
+
+# Secrets and keys
+*.pem
+*.key
+id_rsa
+id_ed25519
+*-credentials*
+secrets/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs and temp
+*.log
+npm-debug.log*
+tmp/
+temp/
+.cache/
+
+# Node (if you add build tooling later)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Composer (if used)
+vendor/
+
+# Local overrides (optional; uncomment if you use)
+# local-config.php
