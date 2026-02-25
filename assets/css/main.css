@@ -218,6 +218,219 @@ html.ss-no-scroll body{ overflow:hidden; }
 /* Woo notices: keep errors, but hide default add-to-cart success bar (we use a toast) */
 .woocommerce-notices-wrapper .woocommerce-message{ display:none !important; }
 
+/* WooCommerce My Account & notices – Stone-N-Sparkle theme colors */
+.woocommerce-info,
+.woocommerce-message,
+.woocommerce-error{
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--ss-border);
+  color: var(--ss-text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.woocommerce-info{
+  background: rgba(212,187,172,0.35);
+  border-color: rgba(101,52,60,0.2);
+}
+/* Remove default notice icon to avoid broken icon font / visual artifact */
+.woocommerce-info::before{
+  content: none !important;
+  display: none !important;
+}
+.woocommerce-message{
+  background: rgba(212,187,172,0.35);
+  border-color: rgba(101,52,60,0.2);
+}
+.woocommerce-message::before{ color: var(--ss-rose); }
+.woocommerce-error{
+  background: rgba(61,19,23,0.06);
+  border-color: var(--ss-rose);
+  color: var(--ss-text);
+}
+.woocommerce-error::before{ color: var(--ss-wine); }
+.woocommerce-info a.button,
+.woocommerce-message a.button,
+.woocommerce-info a:not(.woocommerce-Button--next),
+.woocommerce-message a:not(.woocommerce-Button--next){
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 4px;
+  background: var(--ss-rose);
+  color: var(--ss-beige);
+  font-weight: 600;
+  margin-top: 8px;
+}
+.woocommerce-info a.button:hover,
+.woocommerce-message a.button:hover,
+.woocommerce-info a:not(.woocommerce-Button--next):hover,
+.woocommerce-message a:not(.woocommerce-Button--next):hover{
+  filter: brightness(1.05);
+}
+
+/* My Account layout – card panel and nav (Customer Account Profile style) */
+.woocommerce-account .woocommerce{
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation{
+  width: 100%;
+  border-bottom: 1px solid var(--ss-border);
+  padding-bottom: 12px;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation ul{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  justify-content: flex-start;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation li{
+  margin: 0;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation a{
+  display: inline-block;
+  padding: 8px 4px;
+  color: var(--ss-text);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -14px;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation a:hover{
+  opacity: 0.85;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation li.is-active a{
+  border-bottom-color: var(--ss-rose);
+  font-weight: 600;
+}
+/* Log out: style as a button and separate from nav tabs (confirmation handled by JS) */
+.woocommerce-account .woocommerce-MyAccount-navigation li.woocommerce-MyAccount-navigation-link--customer-logout{
+  margin-left: auto;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation li.woocommerce-MyAccount-navigation-link--customer-logout a{
+  padding: 10px 18px;
+  border-radius: 4px;
+  border: 1px solid var(--ss-border);
+  background: rgba(61,19,23,0.08);
+  margin-bottom: -12px;
+  border-bottom: 2px solid transparent;
+}
+.woocommerce-account .woocommerce-MyAccount-navigation li.woocommerce-MyAccount-navigation-link--customer-logout a:hover{
+  background: rgba(61,19,23,0.12);
+  opacity: 1;
+}
+.woocommerce-account .woocommerce-MyAccount-content{
+  display: flex;
+  flex-direction: column;
+  background: rgba(255,238,219,0.6);
+  border: 1px solid var(--ss-border);
+  border-radius: var(--ss-radius);
+  padding: 24px 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.woocommerce-account .woocommerce-MyAccount-content h2{
+  font-family: var(--ss-font-heading);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0 0 18px;
+  color: var(--ss-text);
+  letter-spacing: 0.02em;
+}
+/* Hide "My account" page title so endpoint title (Orders, Addresses, etc.) is the main heading */
+.woocommerce-account article.page > header:first-child{
+  display: none;
+}
+
+/* Addresses: two-column layout (Billing | Shipping) and clear Add/Edit address buttons */
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses,
+.woocommerce-account .woocommerce-MyAccount-content .u-columns.addresses,
+.woocommerce-account .woocommerce-MyAccount-content .addresses{
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 28px 32px;
+  margin-top: 8px;
+  width: 100%;
+  min-width: 0;
+}
+/* Remove WooCommerce clearfix pseudo-elements so they don't become grid items and break side-by-side layout */
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses::before,
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses::after,
+.woocommerce-account .woocommerce-MyAccount-content .u-columns.addresses::before,
+.woocommerce-account .woocommerce-MyAccount-content .u-columns.addresses::after,
+.woocommerce-account .woocommerce-MyAccount-content .addresses::before,
+.woocommerce-account .woocommerce-MyAccount-content .addresses::after{
+  content: none !important;
+  display: none !important;
+}
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .u-column1,
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .u-column2,
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .woocommerce-Address,
+.woocommerce-account .woocommerce-MyAccount-content .addresses .u-column1,
+.woocommerce-account .woocommerce-MyAccount-content .addresses .u-column2,
+.woocommerce-account .woocommerce-MyAccount-content .addresses .woocommerce-Address{
+  float: none !important;
+  width: auto !important;
+  min-width: 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--ss-border);
+}
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .u-column1:first-child,
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .u-column2:first-child,
+.woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .woocommerce-Address:first-child,
+.woocommerce-account .woocommerce-MyAccount-content .addresses .u-column1:first-child,
+.woocommerce-account .woocommerce-MyAccount-content .addresses .u-column2:first-child,
+.woocommerce-account .woocommerce-MyAccount-content .addresses .woocommerce-Address:first-child{
+  border-top: 0;
+  padding-top: 0;
+}
+@media (max-width: 640px){
+  .woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses,
+  .woocommerce-account .woocommerce-MyAccount-content .u-columns.addresses,
+  .woocommerce-account .woocommerce-MyAccount-content .addresses{
+    grid-template-columns: 1fr;
+  }
+}
+.woocommerce-account .woocommerce-MyAccount-content .woocommerce-Address-title,
+.woocommerce-account .woocommerce-MyAccount-content .addresses h3{
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ss-text);
+}
+.woocommerce-account .woocommerce-MyAccount-content .woocommerce-Address address,
+.woocommerce-account .woocommerce-MyAccount-content .addresses address{
+  font-style: normal;
+  margin: 0 0 12px;
+  color: var(--ss-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.woocommerce-account .woocommerce-MyAccount-content .addresses a{
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 4px;
+  background: var(--ss-rose);
+  color: var(--ss-beige);
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  margin-top: 4px;
+}
+.woocommerce-account .woocommerce-MyAccount-content .addresses a:hover{
+  filter: brightness(1.05);
+}
+.woocommerce-account .woocommerce-MyAccount-content > p:first-of-type{
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--ss-text);
+  opacity: 0.9;
+}
+
 /* Toast (add-to-cart) */
 .ss-toast{
   position: fixed;
