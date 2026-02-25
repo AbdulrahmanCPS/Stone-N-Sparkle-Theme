@@ -13,6 +13,8 @@ This repository is the WordPress theme folder **theme3** for the Stone & Sparkle
 - Not plugins
 - Not `wp-config.php`
 
+**License:** [LICENSE](LICENSE) (GPL v2 or later). **Security:** [SECURITY.md](SECURITY.md). **Asset licensing (fonts):** [ASSETS-LICENSE.md](ASSETS-LICENSE.md).
+
 ---
 
 # Environments
