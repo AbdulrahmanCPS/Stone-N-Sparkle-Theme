@@ -97,6 +97,37 @@ add_action('wp', function () {
 // Remove related products from single product pages
 remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20);
 
+/**
+ * WooCommerce My Account: simplify menu (remove Dashboard and Downloads).
+ * Redirect dashboard to Orders so users land on a useful endpoint.
+ */
+add_filter('woocommerce_account_menu_items', function ($items) {
+    unset($items['dashboard']);
+    unset($items['downloads']);
+    return $items;
+}, 20);
+
+add_filter('woocommerce_login_redirect', function ($redirect, $user) {
+    $orders_url = wc_get_account_endpoint_url('orders', '', wc_get_page_permalink('myaccount'));
+    return $orders_url ? $orders_url : $redirect;
+}, 10, 2);
+
+add_action('template_redirect', function () {
+    if (!function_exists('is_account_page') || !is_account_page()) {
+        return;
+    }
+    $wc = function_exists('WC') ? WC() : null;
+    if (!$wc || !isset($wc->query)) {
+        return;
+    }
+    if (empty($wc->query->get_current_endpoint())) {
+        $orders_url = wc_get_account_endpoint_url('orders', '', wc_get_page_permalink('myaccount'));
+        if ($orders_url) {
+            wp_safe_redirect($orders_url);
+            exit;
+        }
+    }
+});
 
 /**
  * Popup Settings context for ACF Free (page-bound) or ACF Pro (options).
