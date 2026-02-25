@@ -577,6 +577,108 @@ html.ss-no-scroll body{ overflow:hidden; }
   text-transform: uppercase;
   cursor:pointer;
 }
+/* Footer newsletter */
+.ss-footer-newsletter{
+  border-top: 1px solid rgba(255,238,219,0.14);
+  margin-top: 36px;
+  padding-top: 32px;
+  text-align: center;
+}
+.ss-footer-newsletter__title{
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.ss-footer-newsletter__subtitle{
+  font-size: 13px;
+  opacity: 0.85;
+  margin: 0 0 18px;
+  line-height: 1.5;
+  max-width: 480px;
+  margin-inline: auto;
+}
+.ss-footer-newsletter__form{
+  margin: 0;
+}
+.ss-footer-newsletter__row{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.ss-footer-newsletter__input{
+  flex: 1 1 auto;
+  height: 40px;
+  min-width: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255,238,219,0.22);
+  background: rgba(0,0,0,0.10);
+  color: var(--ss-beige);
+  padding: 0 16px;
+  font-family: var(--ss-font-body);
+  font-size: 13px;
+  outline: none;
+}
+.ss-footer-newsletter__input::placeholder{
+  color: rgba(255,238,219,0.55);
+}
+.ss-footer-newsletter__input:focus{
+  border-color: rgba(255,238,219,0.40);
+  box-shadow: 0 0 0 3px rgba(255,238,219,0.08);
+}
+.ss-footer-newsletter__btn{
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,238,219,0.24);
+  background: var(--ss-beige);
+  color: var(--ss-wine);
+  font-family: var(--ss-font-body);
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+.ss-footer-newsletter__btn:hover{
+  filter: brightness(0.96);
+  transform: translateY(-1px);
+}
+.ss-footer-newsletter__btn:disabled{
+  opacity: 0.65;
+  cursor: default;
+  transform: none;
+}
+.ss-footer-newsletter__msg{
+  margin: 12px auto 0;
+  font-size: 13px;
+  line-height: 1.4;
+  max-width: 440px;
+}
+.ss-footer-newsletter__msg--success{
+  color: rgba(255,238,219,0.95);
+}
+.ss-footer-newsletter__msg--error{
+  color: #ff9b9b;
+}
+
+@media (max-width: 480px){
+  .ss-footer-newsletter__row{
+    flex-direction: column;
+    max-width: 100%;
+  }
+  .ss-footer-newsletter__input{
+    width: 100%;
+  }
+  .ss-footer-newsletter__btn{
+    width: 100%;
+  }
+}
+
 .ss-footer-bottom{
   border-top: 1px solid rgba(255,238,219,0.14);
   margin-top: 28px;

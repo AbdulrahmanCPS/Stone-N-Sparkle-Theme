@@ -1592,6 +1592,61 @@ $fields[] = array(
         );
     }
 
+    // Newsletter
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_accordion',
+        'label' => 'Newsletter Section',
+        'name' => '',
+        'type' => 'accordion',
+        'open' => 0,
+        'multi_expand' => 0,
+        'endpoint' => 0,
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_enabled',
+        'label' => 'footer_newsletter_enabled',
+        'name' => 'footer_newsletter_enabled',
+        'type' => 'true_false',
+        'ui' => 1,
+        'default_value' => 1,
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_title',
+        'label' => 'footer_newsletter_title',
+        'name' => 'footer_newsletter_title',
+        'type' => 'text',
+        'default_value' => 'Newsletter',
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_subtitle',
+        'label' => 'footer_newsletter_subtitle',
+        'name' => 'footer_newsletter_subtitle',
+        'type' => 'textarea',
+        'new_lines' => 'br',
+        'default_value' => 'Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.',
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_placeholder',
+        'label' => 'footer_newsletter_placeholder',
+        'name' => 'footer_newsletter_placeholder',
+        'type' => 'text',
+        'default_value' => 'Enter your email',
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_button_text',
+        'label' => 'footer_newsletter_button_text',
+        'name' => 'footer_newsletter_button_text',
+        'type' => 'text',
+        'default_value' => 'Join',
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_accordion_end',
+        'label' => 'Newsletter Section End',
+        'name' => '',
+        'type' => 'accordion',
+        'endpoint' => 1,
+    );
+
     // Copyright
     $fields[] = array(
         'key' => 'field_ss_footer_copyright_enabled',
