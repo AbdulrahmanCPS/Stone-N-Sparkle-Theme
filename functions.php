@@ -78,6 +78,35 @@ add_action('after_setup_theme', function () {
 });
 
 /**
+ * Newsletter block: Customizer settings (no ACF required).
+ * Appearance → Customize → Footer Newsletter.
+ */
+add_action('customize_register', function ($wp_customize) {
+    $wp_customize->add_section('ss_newsletter', [
+        'title'    => __('Footer Newsletter', 'stone-sparkle'),
+        'priority' => 90,
+    ]);
+    $wp_customize->add_setting('ss_newsletter_enabled', [
+        'default'           => 1,
+        'sanitize_callback' => 'absint',
+    ]);
+    $wp_customize->add_control('ss_newsletter_enabled', [
+        'label'   => __('Show newsletter signup block above footer', 'stone-sparkle'),
+        'section' => 'ss_newsletter',
+        'type'    => 'checkbox',
+    ]);
+    $wp_customize->add_setting('ss_newsletter_title', [
+        'default'           => 'Subscribe to our emails',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+    $wp_customize->add_control('ss_newsletter_title', [
+        'label'   => __('Heading', 'stone-sparkle'),
+        'section' => 'ss_newsletter',
+        'type'    => 'text',
+    ]);
+});
+
+/**
  * WooCommerce: archive UI cleanup
  * - The shop layout is custom (lookbook + grid), so we hide default breadcrumb,
  *   result count, and ordering controls.
@@ -1533,6 +1562,39 @@ $fields[] = array(
     $add_section('about', 'About', 'About');
     $add_section('support', 'Support', 'Support');
     $add_section('contact', 'Contact', 'Contact');
+
+    // Newsletter (footer strip – posts to The Newsletter Plugin ?na=s)
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_accordion',
+        'label' => 'Newsletter Section',
+        'name' => '',
+        'type' => 'accordion',
+        'open' => 0,
+        'multi_expand' => 0,
+        'endpoint' => 0,
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_enabled',
+        'label' => 'footer_newsletter_enabled',
+        'name' => 'footer_newsletter_enabled',
+        'type' => 'true_false',
+        'ui' => 1,
+        'default_value' => 0,
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_title',
+        'label' => 'footer_newsletter_title',
+        'name' => 'footer_newsletter_title',
+        'type' => 'text',
+        'default_value' => 'Subscribe to our emails',
+    );
+    $fields[] = array(
+        'key' => 'field_ss_footer_newsletter_accordion_end',
+        'label' => 'Newsletter Section End',
+        'name' => '',
+        'type' => 'accordion',
+        'endpoint' => 1,
+    );
 
     // Social
     $fields[] = array(

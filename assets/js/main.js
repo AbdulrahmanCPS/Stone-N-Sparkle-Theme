@@ -169,6 +169,74 @@
 })();
 
 /**
+ * Footer newsletter form: submit via AJAX, show confirmation on same page (no redirect).
+ */
+(function(){
+  const form = document.querySelector('.ss-newsletter-block__form');
+  if (!form) return;
+
+  const block = form.closest('.ss-newsletter-block');
+  const successEl = block ? block.querySelector('.ss-newsletter-block__success') : null;
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const action = (block && block.getAttribute('data-newsletter-action')) || form.getAttribute('action') || '';
+    if (!action) return;
+
+    const submitBtn = form.querySelector('.ss-newsletter-block__submit');
+    const emailInput = form.querySelector('input[name="ne"]');
+    if (!emailInput || !emailInput.value.trim()) return;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
+    }
+
+    const body = new URLSearchParams(new FormData(form));
+
+    fetch(action, {
+      method: 'POST',
+      body: body,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      redirect: 'manual',
+      credentials: 'same-origin'
+    })
+      .then(function(res) {
+        // TNP often redirects (302/303); with redirect:'manual' we may get status 0 (opaque redirect).
+        var isSuccess = res.status === 200 || res.status === 302 || res.status === 303 || res.status === 0 || res.type === 'opaqueredirect';
+        if (isSuccess) {
+          if (successEl) {
+            successEl.textContent = successEl.getAttribute('data-success-message') || successEl.textContent;
+            successEl.hidden = false;
+            form.setAttribute('aria-hidden', 'true');
+            form.style.display = 'none';
+          }
+        } else {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('aria-busy');
+          }
+          if (successEl) {
+            successEl.hidden = false;
+            successEl.textContent = successEl.getAttribute('data-error-message') || 'Something went wrong. Please try again.';
+          }
+        }
+      })
+      .catch(function() {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+        }
+        if (successEl) {
+          successEl.hidden = false;
+          successEl.textContent = successEl.getAttribute('data-error-message') || 'Something went wrong. Please try again.';
+        }
+      });
+  });
+})();
+
+/**
  * WooCommerce: Add-to-cart toast
  * - Replaces the default top notice bar with a small popup.
  * - Uses Woo's jQuery event: `added_to_cart`.

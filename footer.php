@@ -83,9 +83,39 @@ $copyright_text    = str_replace(
     [date('Y'), get_bloginfo('name')],
     $copyright_text
 );
+// Newsletter block: Customizer (no ACF required). ACF can override if options page exists.
+$newsletter_enabled = (bool) get_theme_mod('ss_newsletter_enabled', 1);
+$newsletter_title   = (string) get_theme_mod('ss_newsletter_title', 'Subscribe to our emails');
+if (function_exists('ss_footer_get_field')) {
+    $acf_enabled = ss_footer_get_field('footer_newsletter_enabled', null);
+    if ($acf_enabled !== null && $acf_enabled !== '') {
+        $newsletter_enabled = (bool) $acf_enabled;
+    }
+    $acf_title = ss_footer_get_field('footer_newsletter_title', null);
+    if ($acf_title !== null && $acf_title !== '') {
+        $newsletter_title = (string) $acf_title;
+    }
+}
 ?>
 <footer class="ss-site-footer">
   <div class="ss-container">
+
+<?php if ($newsletter_enabled && $newsletter_title !== ''): ?>
+    <section class="ss-newsletter-block" aria-labelledby="ss-newsletter-heading" data-newsletter-action="<?php echo esc_url(home_url('/?na=ajaxsub')); ?>">
+      <h2 class="ss-newsletter-block__title" id="ss-newsletter-heading"><?php echo esc_html($newsletter_title); ?></h2>
+      <p class="ss-newsletter-block__success" role="status" aria-live="polite" hidden data-success-message="<?php echo esc_attr(__('Thank you for subscribing.', 'stone-sparkle')); ?>"><?php echo esc_html(__('Thank you for subscribing.', 'stone-sparkle')); ?></p>
+      <form class="ss-newsletter-block__form" method="post" action="<?php echo esc_url(home_url('/?na=ajaxsub')); ?>" novalidate>
+        <input type="hidden" name="nr" value="footer" />
+        <div class="ss-newsletter-block__field-wrap">
+          <label for="ss-newsletter-email" class="screen-reader-text"><?php esc_html_e('Email', 'stone-sparkle'); ?></label>
+          <input type="email" id="ss-newsletter-email" name="ne" class="ss-newsletter-block__input" placeholder="<?php esc_attr_e('Email', 'stone-sparkle'); ?>" required autocomplete="email" />
+          <button type="submit" class="ss-newsletter-block__submit" aria-label="<?php esc_attr_e('Subscribe', 'stone-sparkle'); ?>">
+            <span aria-hidden="true">&rarr;</span>
+          </button>
+        </div>
+      </form>
+    </section>
+<?php endif; ?>
 
     <div class="ss-footer-inner ss-footer-grid">
 
