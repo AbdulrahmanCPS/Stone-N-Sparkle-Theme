@@ -7,15 +7,46 @@
 }
 
 @font-face {
-  font-family: 'SS Schrifted Sans';
-  src: url('../fonts/SFT-Schrifted-Sans-TRIAL-Var-BF6413e215ec95b.ttf') format('truetype');
+  font-family: 'Parkinsans';
+  font-style: normal;
+  font-weight: 300;
   font-display: swap;
+  src: url('../fonts/parkinsans/Parkinsans-Light.woff2') format('woff2');
 }
-
 @font-face {
-  font-family: 'SS Schrifted Serif';
-  src: url('../fonts/SFT-Schrifted-Serif-TRIAL-Variable-Roman-BF664ebf6180ce4.ttf') format('truetype');
+  font-family: 'Parkinsans';
+  font-style: normal;
+  font-weight: 400;
   font-display: swap;
+  src: url('../fonts/parkinsans/Parkinsans-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Parkinsans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/parkinsans/Parkinsans-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Parkinsans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/parkinsans/Parkinsans-SemiBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Parkinsans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/parkinsans/Parkinsans-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Parkinsans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('../fonts/parkinsans/Parkinsans-ExtraBold.woff2') format('woff2');
 }
 
 @font-face {
@@ -41,8 +72,9 @@
   --ss-radius: 18px;
   --ss-max: 1120px;
 
-  --ss-font-heading: 'SS Schrifted Serif', serif;
-  --ss-font-body: 'SS Schrifted Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --ss-font-heading: 'Parkinsans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ss-font-body: 'Parkinsans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ss-font-display: 'Parkinsans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --ss-font-ar: 'SS Al Jazeera Arabic', serif;
 }
 
