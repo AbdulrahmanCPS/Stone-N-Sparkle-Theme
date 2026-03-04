@@ -34,8 +34,7 @@ Brand values used
 
 Fonts bundled
 - mollina.otf
-- SFT Schrifted Sans (variable)
-- SFT Schrifted Serif (variable)
+- Parkinsans (Light, Regular, Medium, SemiBold, Bold, ExtraBold — WOFF2, OFL 1.1)
 - Al Jazeera Arabic Bold
 
 Next step (after you activate)

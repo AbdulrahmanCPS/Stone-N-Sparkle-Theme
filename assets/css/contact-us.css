@@ -70,7 +70,7 @@
 
 .ss-contact__title{
   margin: 0;
-  font-family: 'SS Schrifted Serif', serif;
+  font-family: var(--ss-font-heading);
   font-size: 28px;
   letter-spacing: 2px;
   text-transform: uppercase;
