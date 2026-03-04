@@ -54,22 +54,27 @@ function ss_get_category_product_count($term_id) {
 }
 
 /**
- * Render a single category archive image row (one slot, full-width row).
+ * Render a single category archive image row (image-with-text style: image in first grid slot, empty second slot).
  *
  * @param string $url      Image URL.
  * @param string $alt      Alt text.
- * @param string $section_class Optional section wrapper class.
+ * @param string $section_class Optional row wrapper class.
  */
 function ss_render_category_archive_image_row($url, $alt, $section_class = '') {
     if (empty($url)) {
         return;
     }
-    $class = trim('ss-category-archive-image-row ' . $section_class);
+    $class = trim('ss-category-archive-image-with-text ' . $section_class);
     ?>
     <div class="<?php echo esc_attr($class); ?>">
-        <div class="ss-category-archive-image">
+      <div class="ss-category-archive-image-with-text__grid ss-category-archive-image-with-text__grid--gapless ss-category-archive-image-with-text__grid--1-col ss-category-archive-image-with-text__grid--2-col-tablet">
+        <div class="ss-category-archive-image-with-text__media">
+          <div class="ss-category-archive-image">
             <img src="<?php echo esc_url($url); ?>" alt="<?php echo esc_attr($alt); ?>" loading="lazy" decoding="async">
+          </div>
         </div>
+        <div class="ss-category-archive-image-with-text__content" aria-hidden="true"></div>
+      </div>
     </div>
     <?php
 }
@@ -83,7 +88,7 @@ function ss_render_top_images($image_urls, $cat_name) {
         return;
     }
     echo '<section class="ss-category-archive-top" aria-label="' . esc_attr($cat_name) . ' Lookbook">';
-    echo '<div class="ss-category-archive-image-stack">';
+    echo '<div class="ss-container ss-category-archive-image-stack">';
     foreach ($slice as $url) {
         ss_render_category_archive_image_row($url, $cat_name, 'ss-category-archive-top-item');
     }
@@ -99,7 +104,7 @@ function ss_render_mid_images($image_urls, $cat_name) {
         return;
     }
     echo '<section class="ss-category-archive-mid" aria-label="' . esc_attr($cat_name) . ' Lookbook Mid">';
-    echo '<div class="ss-category-archive-image-stack">';
+    echo '<div class="ss-container ss-category-archive-image-stack">';
     foreach ($slice as $url) {
         ss_render_category_archive_image_row($url, $cat_name, 'ss-category-archive-mid-item');
     }
@@ -115,7 +120,7 @@ function ss_render_trailing_images($image_urls, $cat_name) {
         return;
     }
     echo '<section class="ss-category-archive-trailing" aria-label="' . esc_attr($cat_name) . ' Lookbook Trailing">';
-    echo '<div class="ss-category-archive-image-stack">';
+    echo '<div class="ss-container ss-category-archive-image-stack">';
     foreach ($slice as $url) {
         ss_render_category_archive_image_row($url, $cat_name, 'ss-category-archive-trailing-item');
     }
@@ -136,7 +141,7 @@ function ss_render_category_image_stack($image_urls, $from_index, $to_index, $ca
         return;
     }
     echo '<section class="ss-category-archive-stack" aria-label="' . esc_attr($cat_name) . ' Lookbook">';
-    echo '<div class="ss-category-archive-image-stack">';
+    echo '<div class="ss-container ss-category-archive-image-stack">';
     foreach ($slice as $url) {
         ss_render_category_archive_image_row($url, $cat_name, 'ss-category-archive-stack-item');
     }

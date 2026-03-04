@@ -1020,7 +1020,7 @@ html.ss-no-scroll body{ overflow:hidden; }
   padding: 0 0 64px;
 }
 
-/* Category archive: editorial image blocks (406×544, single-slot rows) */
+/* Category archive: image-with-text style (image in first grid slot, empty second slot) */
 .ss-category-archive .ss-category-archive-top,
 .ss-category-archive .ss-category-archive-mid,
 .ss-category-archive .ss-category-archive-trailing,
@@ -1032,18 +1032,31 @@ html.ss-no-scroll body{ overflow:hidden; }
   display: flex;
   flex-direction: column;
   gap: 28px;
-  max-width: 406px;
-  margin: 0 auto;
 }
 
-.ss-category-archive .ss-category-archive-image-row {
+/* Row: two-column grid; image in first slot, empty second slot */
+.ss-category-archive .ss-category-archive-image-with-text__grid {
+  display: grid;
+  gap: 0;
   width: 100%;
 }
 
+.ss-category-archive .ss-category-archive-image-with-text__grid--1-col {
+  grid-template-columns: 1fr;
+}
+
+.ss-category-archive .ss-category-archive-image-with-text__grid--2-col-tablet {
+  grid-template-columns: 1fr;
+}
+
+.ss-category-archive .ss-category-archive-image-with-text__media {
+  min-width: 0;
+}
+
+/* Image container: fixed aspect, not full-width hero; sits in first slot only */
 .ss-category-archive .ss-category-archive-image {
   width: 100%;
   max-width: 406px;
-  margin: 0 auto;
   aspect-ratio: 406 / 544;
   background: rgba(212, 187, 172, 0.35);
   border: 1px solid rgba(61, 19, 23, 0.08);
@@ -1056,6 +1069,27 @@ html.ss-no-scroll body{ overflow:hidden; }
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.ss-category-archive .ss-category-archive-image-with-text__content {
+  min-width: 0;
+  position: relative;
+}
+
+/* Placeholder (after) in second column so image stays first slot, first row, first column */
+.ss-category-archive .ss-category-archive-image-with-text__content::after {
+  content: '';
+  display: block;
+  width: 100%;
+  aspect-ratio: 406 / 544;
+  background: rgba(212, 187, 172, 0.12);
+  border-radius: 4px;
+}
+
+@media (min-width: 768px) {
+  .ss-category-archive .ss-category-archive-image-with-text__grid--2-col-tablet {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* ===============
