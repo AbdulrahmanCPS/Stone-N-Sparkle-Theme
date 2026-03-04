@@ -1020,6 +1020,44 @@ html.ss-no-scroll body{ overflow:hidden; }
   padding: 0 0 64px;
 }
 
+/* Category archive: editorial image blocks (406×544, single-slot rows) */
+.ss-category-archive .ss-category-archive-top,
+.ss-category-archive .ss-category-archive-mid,
+.ss-category-archive .ss-category-archive-trailing,
+.ss-category-archive .ss-category-archive-stack {
+  padding: 32px 0 48px;
+}
+
+.ss-category-archive .ss-category-archive-image-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 406px;
+  margin: 0 auto;
+}
+
+.ss-category-archive .ss-category-archive-image-row {
+  width: 100%;
+}
+
+.ss-category-archive .ss-category-archive-image {
+  width: 100%;
+  max-width: 406px;
+  margin: 0 auto;
+  aspect-ratio: 406 / 544;
+  background: rgba(212, 187, 172, 0.35);
+  border: 1px solid rgba(61, 19, 23, 0.08);
+  box-shadow: 0 16px 48px rgba(61, 19, 23, 0.12);
+  overflow: hidden;
+}
+
+.ss-category-archive .ss-category-archive-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* ===============
    WooCommerce: Shop (Lookbook + 3-up grid)
    =============== */
@@ -1243,7 +1281,8 @@ html.ss-no-scroll body{ overflow:hidden; }
     justify-content: center;
   }
   
-  .ss-category-lookbook-grid {
+  .ss-category-lookbook-grid,
+  .ss-category-archive .ss-category-archive-image-stack {
     max-width: 380px;
     gap: 24px;
   }
@@ -1266,7 +1305,8 @@ html.ss-no-scroll body{ overflow:hidden; }
     width: 100%;
   }
   
-  .ss-category-lookbook-grid {
+  .ss-category-lookbook-grid,
+  .ss-category-archive .ss-category-archive-image-stack {
     max-width: 100%;
     padding: 0 24px;
     gap: 20px;
