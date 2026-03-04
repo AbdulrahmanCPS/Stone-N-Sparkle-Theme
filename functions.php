@@ -1253,6 +1253,11 @@ add_filter('woocommerce_product_loop_start', function ($html) {
 require_once get_template_directory() . '/category-lookbook-fields.php';
 
 /**
+ * Category archive layout helpers (editorial image + product flow)
+ */
+require_once get_template_directory() . '/inc/category-archive-helpers.php';
+
+/**
  * Single product: add "Request Private View" + "Add To Wishlist" buttons
  * directly under the main Add to cart button.
  */
