@@ -179,10 +179,14 @@ function ss_popup_get($field_name, $default = null) {
 
 
 add_action('wp_enqueue_scripts', function () {
+    $main_deps = [];
+    if (function_exists('is_product') && is_product()) {
+        $main_deps[] = 'woocommerce-general';
+    }
     wp_enqueue_style(
         'stone-sparkle-main',
         get_template_directory_uri() . '/assets/css/main.css',
-        [],
+        $main_deps,
         SS_THEME_VERSION
     );
 
@@ -226,6 +230,14 @@ add_action('wp_enqueue_scripts', function () {
         wp_enqueue_script(
             'stone-sparkle-product-gallery',
             get_template_directory_uri() . '/assets/js/product-gallery.js',
+            [],
+            SS_THEME_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
+            'stone-sparkle-quantity-stepper',
+            get_template_directory_uri() . '/assets/js/quantity-stepper.js',
             [],
             SS_THEME_VERSION,
             true
@@ -1253,8 +1265,40 @@ add_filter('woocommerce_product_loop_start', function ($html) {
 require_once get_template_directory() . '/category-lookbook-fields.php';
 
 /**
- * Single product: add "Request Private View" + "Add To Wishlist" buttons
- * directly under the main Add to cart button.
+ * Single product: title row wrapper so we can place wishlist inline with title.
+ */
+add_action('woocommerce_single_product_summary', function () {
+    if (!function_exists('is_product') || !is_product()) {
+        return;
+    }
+    echo '<div class="ss-pdp-title-row">';
+}, 4);
+add_action('woocommerce_single_product_summary', function () {
+    echo '</div>';
+}, 7);
+
+/**
+ * Single product: inline "Add to wishlist" link beside the product title (editorial hierarchy).
+ */
+add_action('woocommerce_single_product_summary', function () {
+    if (!function_exists('is_product') || !is_product()) {
+        return;
+    }
+    $pid = get_the_ID();
+    if (!$pid) {
+        return;
+    }
+    $wishlist_url = add_query_arg(['product_id' => $pid], home_url('/wishlist/'));
+    ?>
+    <a class="ss-pdp-wishlist-inline" href="<?php echo esc_url($wishlist_url); ?>" aria-label="<?php esc_attr_e('Add to wishlist', 'woocommerce'); ?>">
+        <span class="ss-pdp-wishlist-inline__icon" aria-hidden="true"></span>
+        <?php esc_html_e('Add to wishlist', 'woocommerce'); ?>
+    </a>
+    <?php
+}, 6);
+
+/**
+ * Single product: "Request Private View" only (wishlist moved to title row). Same row as Add to cart.
  */
 add_action('woocommerce_after_add_to_cart_button', function () {
     if (!function_exists('is_product') || !is_product()) {
@@ -1274,14 +1318,10 @@ add_action('woocommerce_after_add_to_cart_button', function () {
     }
 
     $pid = $product->get_id();
-
-    // These pages can be created in WP. The querystring makes it easy to pre-fill forms later.
     $private_url = add_query_arg(['product_id' => $pid], home_url('/private-viewing/'));
-    $wishlist_url = add_query_arg(['product_id' => $pid], home_url('/wishlist/'));
 
     echo '<div class="ss-pdp-secondary" role="group" aria-label="Product actions">';
     echo '<a class="ss-pdp-btn" href="' . esc_url($private_url) . '">Request Private View</a>';
-    echo '<a class="ss-pdp-btn ss-pdp-btn--outline" href="' . esc_url($wishlist_url) . '">Add To Wishlist</a>';
     echo '</div>';
 }, 25);
 
