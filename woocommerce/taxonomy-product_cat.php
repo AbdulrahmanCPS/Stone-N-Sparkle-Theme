@@ -43,17 +43,6 @@ $total    = ss_get_category_product_count($cat_id);
 
   <?php ss_render_top_images($images, $current_cat->name); ?>
 
-  <section class="ss-category-header">
-    <div class="ss-container">
-      <h1 class="ss-category-title"><?php echo esc_html($current_cat->name); ?></h1>
-      <?php if (!empty($current_cat->description)) : ?>
-        <div class="ss-category-description">
-          <?php echo wpautop(wp_kses_post($current_cat->description)); ?>
-        </div>
-      <?php endif; ?>
-    </div>
-  </section>
-
   <?php
   if ($total > 20) {
       // >20: first 20 → 3 mid images → remaining products → 3 trailing images (hooks once per archive)
