@@ -41,7 +41,7 @@ function ss_get_category_product_count($term_id) {
         'post_status'             => 'publish',
         'fields'                  => 'ids',
         'posts_per_page'          => 1,
-        'no_found_rows'           => true,
+        'no_found_rows'           => false, // Must be false so found_posts is accurate for total count.
         'update_post_meta_cache'   => false,
         'update_post_term_cache'  => false,
         'tax_query'               => array(array(
