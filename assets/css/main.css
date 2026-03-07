@@ -1587,42 +1587,33 @@ body.single-product .woocommerce .variations select:disabled,
 .single-product .reset_variations:focus-visible{ outline: 2px solid var(--ss-rose); outline-offset: 2px; }
 
 /* --------------- Cart row: quantity inline with add-to-cart, then Request private view underneath same width --------------- */
-/* Grid: variations table + single_variation_wrap span full width; qty + button share row; secondary below */
+/* Flex layout so simple and variable products share the same alignment: one row (qty + button), then secondary full width. */
 .single-product div.product form.cart{
-  display: grid;
-  grid-template-columns: auto minmax(200px, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   margin-top: 14px;
   width: 100%;
   max-width: min(560px, 100%);
 }
+/* Full-width rows: variations, variation wrap, cart row wrapper, secondary */
 .single-product div.product form.cart .variations,
-.single-product div.product form.cart table.variations{
-  grid-column: 1 / -1;
-  grid-row: 1;
+.single-product div.product form.cart table.variations,
+.single-product div.product form.cart .single_variation_wrap,
+.single-product div.product form.cart .woocommerce-variation-add-to-cart,
+.single-product div.product form.cart .variations_button,
+.single-product div.product form.cart > .ss-pdp-secondary{
   width: 100%;
+  flex: 0 0 100%;
 }
-.single-product div.product form.cart .single_variation_wrap{
-  grid-column: 1 / -1;
-  grid-row: 2;
-  width: 100%;
-}
-/* WooCommerce wraps quantity + button in .woocommerce-variation-add-to-cart / .variations_button; put that row in grid and flex qty + button inline */
+/* Cart row: quantity + Add to cart on one row, left-aligned (variable: wrapper; simple: direct .quantity + button) */
 .single-product div.product form.cart .woocommerce-variation-add-to-cart,
 .single-product div.product form.cart .variations_button{
-  grid-column: 1 / -1;
-  grid-row: 3;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
-  width: 100%;
-}
-.single-product div.product form.cart .ss-pdp-secondary{
-  grid-column: 1 / -1;
-  grid-row: 4;
-  width: 100%;
 }
 
 /* Quantity: counter-style pill on single product (default WooCommerce quantity – no stepper markup).
@@ -1705,6 +1696,10 @@ body.single-product .woocommerce .variations select:disabled,
   min-width: 150px;
   height: auto;
   box-sizing: border-box;
+  transition: box-shadow 0.2s ease;
+}
+.single-product div.product form.cart .quantity:has(.gby-qty-stepper):hover{
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 .single-product .quantity .gby-qty-stepper{
   display: inline-flex;
@@ -1733,10 +1728,12 @@ body.single-product .woocommerce .variations select:disabled,
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  box-shadow: none;
 }
 .single-product .quantity .gby-qty-stepper .gby-qty-btn:hover:not(:disabled){
   background: #f2f2f2;
   color: var(--ss-wine);
+  box-shadow: none;
 }
 .single-product .quantity .gby-qty-stepper .gby-qty-btn:active:not(:disabled){
   background: #e8e8e8;
@@ -1747,9 +1744,8 @@ body.single-product .woocommerce .variations select:disabled,
   color: #bbb;
 }
 .single-product .quantity .gby-qty-stepper .gby-qty-btn:focus-visible{
-  outline: 2px solid var(--ss-rose);
-  outline-offset: 0;
-  box-shadow: none;
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ss-rose);
 }
 .single-product .quantity .gby-qty-stepper .qty{
   flex: 0 0 48px;
@@ -1809,9 +1805,23 @@ body.single-product .woocommerce .variations select:disabled,
 .single-product div.product form.cart button.button.alt,
 .single-product div.product form.cart button.button{
   flex: 1 1 140px;
-  min-width: 0;
+  min-width: 140px;
   max-width: 100%;
   width: auto;
+  height: var(--ss-pill-h);
+  padding: 0 24px;
+  border-radius: var(--ss-pill-radius);
+  background: transparent;
+  border: var(--ss-pill-border);
+  color: var(--ss-wine);
+  font-family: var(--ss-pill-font);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  box-sizing: border-box;
 }
 .single-product div.product form.cart button.single_add_to_cart_button:hover,
 .single-product div.product form.cart button.button.alt:hover,
@@ -1888,20 +1898,31 @@ body.single-product .woocommerce .variations select:disabled,
 }
 .single-product .ss-pdp-secondary .ss-pdp-btn:active{ transform: translateY(0); }
 
-/* Single product purchase UI: responsive (stack variations, quantity, add-to-cart, request private view) */
+/* Single product purchase UI: responsive (stack quantity, add-to-cart, request private view) */
 @media (max-width: 480px){
   .single-product div.product form.cart{
-    grid-template-columns: 1fr;
     gap: 10px;
   }
-  .single-product div.product form.cart .variations,
-  .single-product div.product form.cart table.variations{ grid-row: 1; grid-column: 1; }
-  .single-product div.product form.cart .single_variation_wrap{ grid-row: 2; grid-column: 1; }
-  .single-product div.product form.cart .quantity{ grid-row: 3; grid-column: 1; }
-  .single-product div.product form.cart button.single_add_to_cart_button,
-  .single-product div.product form.cart button.button.alt,
-  .single-product div.product form.cart button.button{ grid-row: 4; grid-column: 1; }
-  .single-product .ss-pdp-secondary{ grid-row: 5; grid-column: 1; }
+  /* Simple product: stack direct .quantity and button */
+  .single-product div.product form.cart > .quantity,
+  .single-product div.product form.cart > button.single_add_to_cart_button,
+  .single-product div.product form.cart > button.button{
+    width: 100%;
+    flex: 0 0 100%;
+  }
+  /* Variable product: stack quantity and button inside .variations_button */
+  .single-product div.product form.cart .woocommerce-variation-add-to-cart,
+  .single-product div.product form.cart .variations_button{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .single-product div.product form.cart .woocommerce-variation-add-to-cart .quantity,
+  .single-product div.product form.cart .variations_button .quantity,
+  .single-product div.product form.cart .woocommerce-variation-add-to-cart button.single_add_to_cart_button,
+  .single-product div.product form.cart .variations_button button.button{
+    width: 100%;
+    flex: 0 0 auto;
+  }
   .single-product div.product form.cart .quantity .qty{
     width: 44px;
   }
