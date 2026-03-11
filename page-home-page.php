@@ -21,39 +21,14 @@ get_header();
     } else {
 
       $shop = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
-
-      // Lookbook stack (ACF-driven, with safe fallbacks)
-      $lookbook = [];
-      for ($i = 1; $i <= 7; $i++) {
-        $hide = function_exists('get_field') ? (bool) get_field('hide_section_' . $i) : false;
-        if ($hide) {
-          continue;
-        }
-
-        $img = function_exists('get_field') ? (string) get_field('section_' . $i . '_image') : '';
-        $btn_text = function_exists('get_field') ? (string) get_field('section_' . $i . '_button_text') : '';
-        $btn_link = function_exists('get_field') ? get_field('section_' . $i . '_button_link') : null;
-
-        if ($btn_text === '') {
-          $btn_text = __('Shop', 'stone-sparkle');
-        }
-
-        $url = $shop;
-        $target = '';
-        if (is_array($btn_link) && !empty($btn_link['url'])) {
-          $url = $btn_link['url'];
-          $target = !empty($btn_link['target']) ? $btn_link['target'] : '';
-        }
-
-        $lookbook[] = [
-          'img' => $img,
-          'cta' => $btn_text,
-          'link' => $url,
-          'target' => $target,
-        ];
+      if (!$shop) {
+        $shop = home_url('/shop/');
       }
 
-      // If everything is hidden or ACF isn't present, show 7 placeholders.
+      // Lookbook stack: dynamic sections from meta box (with migration from legacy ACF if needed).
+      $lookbook = function_exists('ss_get_home_sections') ? ss_get_home_sections(get_the_ID()) : [];
+
+      // Fallback when no sections: show 7 placeholders so layout does not break.
       if (empty($lookbook)) {
         for ($i = 1; $i <= 7; $i++) {
           $lookbook[] = [
@@ -61,6 +36,7 @@ get_header();
             'cta' => __('Shop', 'stone-sparkle'),
             'link' => $shop,
             'target' => '',
+            'show_button' => true,
           ];
         }
       }
@@ -84,9 +60,11 @@ get_header();
                   <?php endif; ?>
                 </div>
               </div>
+              <?php if (!empty($item['show_button'])) : ?>
               <div class="ss-lookbook-btnwrap">
-                <a class="ss-btn" href="<?php echo esc_url($item['link']); ?>" <?php echo $item['target'] ? 'target="'.esc_attr($item['target']).'" rel="noopener"' : ''; ?>><?php echo esc_html($item['cta']); ?></a>
+                <a class="ss-btn" href="<?php echo esc_url($item['link']); ?>" <?php echo !empty($item['target']) && $item['target'] === '_blank' ? 'target="_blank" rel="noopener"' : ''; ?>><?php echo esc_html($item['cta']); ?></a>
               </div>
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
         </div>
