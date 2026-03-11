@@ -1276,6 +1276,11 @@ add_filter('woocommerce_product_loop_start', function ($html) {
 require_once get_template_directory() . '/category-lookbook-fields.php';
 
 /**
+ * Dynamic Homepage Sections (meta box, migration from legacy ACF section_1…7)
+ */
+require_once get_template_directory() . '/inc/home-sections.php';
+
+/**
  * Single product: title row wrapper so we can place wishlist inline with title.
  */
 add_action('woocommerce_single_product_summary', function () {
