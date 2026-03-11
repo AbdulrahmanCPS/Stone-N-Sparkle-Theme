@@ -7,8 +7,7 @@ This theme references fonts and other assets that may have **separate licensing*
 | Asset | Filename / note | Action before public release |
 |-------|-----------------|------------------------------|
 | **SS Mollina** | `mollina.otf` | Confirm you have redistribution rights. |
-| **SFT Schrifted Sans** | `SFT-Schrifted-Sans-TRIAL-Var-*.ttf` | **TRIAL** in filename — commercial/trial font; do not redistribute publicly without a proper license. |
-| **SFT Schrifted Serif** | `SFT-Schrifted-Serif-TRIAL-Variable-Roman-*.ttf` | **TRIAL** in filename — same as above. |
+| **Parkinsans** | `assets/fonts/parkinsans/*.woff2` | Licensed under SIL Open Font License 1.1. Full license text: [assets/fonts/parkinsans/OFL.txt](assets/fonts/parkinsans/OFL.txt). See [openfontlicense.org](https://openfontlicense.org). |
 | **Al Jazeera Arabic** | `Al-Jazeera-Arabic-Bold.ttf` | Confirm trademark/license allows redistribution in this theme. |
 
 ## Before going public

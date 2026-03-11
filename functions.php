@@ -1299,6 +1299,13 @@ add_action('woocommerce_single_product_summary', function () {
 
 /**
  * Single product: "Request Private View" only (wishlist moved to title row). Same row as Add to cart.
+ * Category archive layout helpers (editorial image + product flow)
+ */
+require_once get_template_directory() . '/inc/category-archive-helpers.php';
+
+/**
+ * Single product: add "Request Private View" + "Add To Wishlist" buttons
+ * directly under the main Add to cart button.
  */
 add_action('woocommerce_after_add_to_cart_button', function () {
     if (!function_exists('is_product') || !is_product()) {

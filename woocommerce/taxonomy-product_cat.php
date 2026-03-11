@@ -1,107 +1,89 @@
 <?php
 /**
  * Product Category Archive Template
- * 
- * Shows lookbook images for the category followed by products in a grid
+ *
+ * Editorial layout: 2 top images → category header → products (max 20 first batch).
+ * If >20 products: first 20 → 3 images → remaining products → 3 trailing images (8 images total).
+ * If ≤20 products: stack images 3–8 vertically, then all products.
  */
 
 defined('ABSPATH') || exit;
 
 get_header();
 
-// Get current category
 $current_cat = get_queried_object();
-$cat_id = $current_cat->term_id;
-?>
-
-<main id="primary" class="ss-main ss-category-archive" role="main">
-  
-  <?php
-  // Check if this category has lookbook images defined in ACF
-  $lookbook_images = [];
-  
-  // Try to get ACF lookbook images for this category (you'll need to set these up in ACF)
-  // For now, we'll create a fallback that checks for custom fields
-  for ($i = 1; $i <= 6; $i++) {
-    $img_url = get_term_meta($cat_id, 'lookbook_image_' . $i, true);
-    if ($img_url) {
-      $lookbook_images[] = $img_url;
+if (!($current_cat instanceof WP_Term) || $current_cat->taxonomy !== 'product_cat') {
+    // Fallback: let WooCommerce handle it
+    do_action('woocommerce_before_main_content');
+    if (woocommerce_product_loop()) {
+        do_action('woocommerce_before_shop_loop');
+        woocommerce_product_loop_start();
+        if (wc_get_loop_prop('total')) {
+            while (have_posts()) {
+                the_post();
+                wc_get_template_part('content', 'product');
+            }
+        }
+        woocommerce_product_loop_end();
+        do_action('woocommerce_after_shop_loop');
+    } else {
+        do_action('woocommerce_no_products_found');
     }
-  }
-  
-  // If we have lookbook images, display them
-  if (!empty($lookbook_images)) :
-  ?>
-    <section class="ss-category-lookbook" aria-label="<?php echo esc_attr($current_cat->name); ?> Lookbook">
-      <div class="ss-category-lookbook-grid">
-        <?php foreach ($lookbook_images as $img_url) : ?>
-          <div class="ss-category-lookbook-item">
-            <div class="ss-category-lookbook-media">
-              <img src="<?php echo esc_url($img_url); ?>" alt="<?php echo esc_attr($current_cat->name); ?>" loading="lazy">
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </section>
-  <?php endif; ?>
+    do_action('woocommerce_after_main_content');
+    get_footer();
+    return;
+}
 
-  <!-- Category Title -->
-  <section class="ss-category-header">
+$cat_id   = $current_cat->term_id;
+$images   = ss_get_category_archive_images($cat_id);
+$total    = ss_get_category_product_count($cat_id);
+?>
+<main id="primary" class="ss-main ss-category-archive" role="main">
+  <?php do_action('woocommerce_before_main_content'); ?>
+
+  <?php ss_render_top_images($images, $current_cat->name); ?>
+
+  <?php
+  if ($total > 20) {
+      // >20: first 20 → 3 mid images → remaining products → 3 trailing images (hooks once per archive)
+      do_action('woocommerce_before_shop_loop');
+      ?>
+  <section class="ss-category-products" aria-label="Products">
     <div class="ss-container">
-      <h1 class="ss-category-title"><?php echo esc_html($current_cat->name); ?></h1>
-      <?php if ($current_cat->description) : ?>
-        <div class="ss-category-description">
-          <?php echo wpautop(wp_kses_post($current_cat->description)); ?>
-        </div>
-      <?php endif; ?>
+      <?php ss_render_first_product_batch($cat_id, 20); ?>
     </div>
   </section>
-
-  <!-- Products Grid -->
+  <?php ss_render_mid_images($images, $current_cat->name); ?>
+  <section class="ss-category-products" aria-label="Products">
+    <div class="ss-container">
+      <?php ss_render_remaining_products($cat_id, 20); ?>
+    </div>
+  </section>
+  <?php
+      do_action('woocommerce_after_shop_loop');
+      ss_render_trailing_images($images, $current_cat->name);
+  } else {
+      // ≤20: stack images 3–8, then all products
+      ss_render_category_image_stack($images, 2, 7, $current_cat->name);
+      do_action('woocommerce_before_shop_loop');
+      ?>
   <section class="ss-category-products" aria-label="Products">
     <div class="ss-container">
       <?php
-      /**
-       * Hook: woocommerce_before_main_content.
-       */
-      do_action('woocommerce_before_main_content');
-
-      if (woocommerce_product_loop()) {
-        /**
-         * Hook: woocommerce_before_shop_loop.
-         */
-        do_action('woocommerce_before_shop_loop');
-
-        woocommerce_product_loop_start();
-
-        if (wc_get_loop_prop('total')) {
-          while (have_posts()) {
-            the_post();
-            wc_get_template_part('content', 'product');
-          }
-        }
-
-        woocommerce_product_loop_end();
-
-        /**
-         * Hook: woocommerce_after_shop_loop.
-         */
-        do_action('woocommerce_after_shop_loop');
+      if ($total > 0) {
+          ss_render_first_product_batch($cat_id, 999);
       } else {
-        /**
-         * Hook: woocommerce_no_products_found.
-         */
-        do_action('woocommerce_no_products_found');
+          do_action('woocommerce_no_products_found');
       }
-
-      /**
-       * Hook: woocommerce_after_main_content.
-       */
-      do_action('woocommerce_after_main_content');
       ?>
     </div>
   </section>
-</main>
+  <?php
+      do_action('woocommerce_after_shop_loop');
+  }
+  ?>
 
+  <?php do_action('woocommerce_after_main_content'); ?>
+</main>
 <?php
 get_footer();

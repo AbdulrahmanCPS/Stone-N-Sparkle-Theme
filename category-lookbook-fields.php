@@ -3,7 +3,7 @@
  * Category Lookbook Image Fields
  * 
  * Add this code to your functions.php to enable lookbook image uploads for product categories.
- * This allows you to add up to 6 lookbook images per category that will display at the top of the category page.
+ * This allows you to add up to 8 lookbook images per category for the category archive layout.
  */
 
 // Add lookbook image fields to category edit page
@@ -15,14 +15,17 @@ function ss_add_category_lookbook_fields($term, $taxonomy) {
             <h2 style="margin: 20px 0 10px 0; padding: 10px 0; border-bottom: 1px solid #ddd;">
                 Category Lookbook Images
             </h2>
-            <p style="color: #666; font-size: 13px; margin: 5px 0 15px;">
-                Add up to 6 lifestyle/lookbook images that will display at the top of this category page.
+            <p style="color: #666; font-size: 13px; margin: 5px 0 8px;">
+                Add up to 8 lifestyle/lookbook images for this category page (2 top, then optional mid/trailing blocks).
+            </p>
+            <p class="ss-lookbook-recommended-size" style="color: #666; font-size: 12px; margin: 0 0 15px; font-style: italic;">
+                Recommended size: <strong>406 × 544 px</strong>
             </p>
         </th>
     </tr>
     <?php
     
-    for ($i = 1; $i <= 6; $i++) {
+    for ($i = 1; $i <= 8; $i++) {
         $image_url = get_term_meta($term->term_id, 'lookbook_image_' . $i, true);
         ?>
         <tr class="form-field">
@@ -64,7 +67,7 @@ function ss_add_category_lookbook_fields($term, $taxonomy) {
 // Save lookbook image fields
 add_action('edited_product_cat', 'ss_save_category_lookbook_fields', 10, 2);
 function ss_save_category_lookbook_fields($term_id, $tt_id) {
-    for ($i = 1; $i <= 6; $i++) {
+    for ($i = 1; $i <= 8; $i++) {
         if (isset($_POST['lookbook_image_' . $i])) {
             update_term_meta($term_id, 'lookbook_image_' . $i, sanitize_text_field($_POST['lookbook_image_' . $i]));
         }
