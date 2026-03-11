@@ -967,7 +967,6 @@ html.ss-no-scroll body{ overflow:hidden; }
   .ss-footer-grid{ grid-template-columns: 1fr; gap: 26px; justify-items: center; text-align: center; }
   .ss-footer-grid .ss-footer-menu{ align-items: center; }
   .ss-footer-social-icons{ justify-content: center; }
-}
   .ss-lookbook-item{
     grid-template-columns: 1fr;
     gap: 18px;
