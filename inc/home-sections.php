@@ -296,9 +296,16 @@ function ss_render_one_image_slot($section_index, $image_index, $url, $alt, $inn
  */
 function ss_render_one_section_row($index, $images, $button_text, $button_url, $button_target, $show_button = true, $inner_only = false) {
     $name_prefix = 'ss_home_sections[' . $index . ']';
-    $inner = function () use ($name_prefix, $index, $images, $button_text, $button_url, $button_target, $show_button) {
+    $display_num = is_numeric($index) ? (int) $index + 1 : 1;
+    $inner = function () use ($name_prefix, $index, $images, $button_text, $button_url, $button_target, $show_button, $display_num) {
         ?>
         <span class="ss-home-section-handle" aria-label="<?php esc_attr_e('Drag to reorder', 'stone-sparkle'); ?>">⋮⋮</span>
+        <div class="ss-home-section-header">
+            <button type="button" class="ss-home-section-toggle" aria-expanded="false" aria-label="<?php esc_attr_e('Expand section', 'stone-sparkle'); ?>">
+                <span class="ss-home-section-toggle-icon" aria-hidden="true">&#9654;</span>
+                <?php echo esc_html(__('Section', 'stone-sparkle') . ' '); ?><span class="ss-home-section-number"><?php echo (int) $display_num; ?></span>
+            </button>
+        </div>
         <div class="ss-home-section-fields">
             <div class="ss-home-section-field ss-home-section-images">
                 <label><?php esc_html_e('Images (slider on front)', 'stone-sparkle'); ?></label>
@@ -351,7 +358,7 @@ function ss_render_one_section_row($index, $images, $button_text, $button_url, $
         return;
     }
     ?>
-    <li class="ss-home-section-row" data-index="<?php echo esc_attr((string) $index); ?>">
+    <li class="ss-home-section-row ss-home-section-row--collapsed" data-index="<?php echo esc_attr((string) $index); ?>">
     <?php $inner(); ?>
     </li>
     <?php
@@ -443,9 +450,15 @@ add_action('admin_enqueue_scripts', function ($hook) {
 
     wp_add_inline_style('wp-admin', '
         .ss-home-sections-list { list-style:none; margin:0; padding:0; }
-        .ss-home-section-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; padding:12px; background:#f6f7f7; border:1px solid #c3c4c7; border-radius:4px; }
+        .ss-home-section-row { display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; padding:12px; background:#f6f7f7; border:1px solid #c3c4c7; border-radius:4px; flex-wrap:wrap; }
         .ss-home-section-handle { cursor:move; color:#787c82; padding:4px 6px; user-select:none; }
-        .ss-home-section-fields { flex:1; display:grid; gap:10px; }
+        .ss-home-section-header { flex:1; min-width:0; }
+        .ss-home-section-toggle { cursor:pointer; background:none; border:none; padding:4px 0; margin:0; font-size:14px; font-weight:600; color:#1d2327; text-align:left; display:flex; align-items:center; gap:6px; }
+        .ss-home-section-toggle:hover { color:#2271b1; }
+        .ss-home-section-toggle-icon { font-size:10px; line-height:1; transition:transform 0.2s ease; }
+        .ss-home-section-row:not(.ss-home-section-row--collapsed) .ss-home-section-toggle-icon { transform:rotate(90deg); }
+        .ss-home-section-row--collapsed .ss-home-section-fields { display:none !important; }
+        .ss-home-section-fields { flex:1 1 100%; display:grid; gap:10px; min-width:0; }
         .ss-home-section-field label { display:block; font-weight:600; margin-bottom:4px; }
         .ss-home-section-images-list { list-style:none; margin:8px 0; padding:0; }
         .ss-home-section-image-slot { display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px; background:#fff; border:1px solid #c3c4c7; border-radius:4px; }

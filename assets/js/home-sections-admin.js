@@ -35,6 +35,8 @@
                 if (!name) return;
                 input.setAttribute('name', name.replace(/^(ss_home_sections)\[\d+\]/, '$1[' + i + ']'));
             });
+            var numEl = row.querySelector('.ss-home-section-number');
+            if (numEl) numEl.textContent = String(i + 1);
         });
     }
 
@@ -57,7 +59,7 @@
         var idx = nextSectionIndex();
         var html = rowHtml.replace(/\{\{INDEX\}\}/g, String(idx));
         var li = document.createElement('li');
-        li.className = 'ss-home-section-row';
+        li.className = 'ss-home-section-row ss-home-section-row--collapsed';
         li.setAttribute('data-index', String(idx));
         li.innerHTML = html;
         list.appendChild(li);
@@ -137,6 +139,19 @@
     function bindSectionRowActions(row) {
         if (!row || row._bound) return;
         row._bound = true;
+
+        var toggleBtn = row.querySelector('.ss-home-section-toggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                row.classList.toggle('ss-home-section-row--collapsed');
+                var expanded = !row.classList.contains('ss-home-section-row--collapsed');
+                toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                toggleBtn.setAttribute('aria-label', expanded ? 'Collapse section' : 'Expand section');
+            });
+            var collapsed = row.classList.contains('ss-home-section-row--collapsed');
+            toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            toggleBtn.setAttribute('aria-label', collapsed ? 'Expand section' : 'Collapse section');
+        }
 
         var removeRowBtn = row.querySelector('.ss-home-section-remove');
         if (removeRowBtn) {
