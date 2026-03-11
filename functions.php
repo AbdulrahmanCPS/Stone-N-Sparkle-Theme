@@ -78,6 +78,17 @@ add_action('after_setup_theme', function () {
 });
 
 /**
+ * Front page: show only the site name in the document title (e.g. "Stone and Sparkle").
+ * Other pages keep the default title (page/post title + site name, SEO plugins, etc.).
+ */
+add_filter('pre_get_document_title', function ($title) {
+    if (is_front_page()) {
+        return get_bloginfo('name');
+    }
+    return $title;
+});
+
+/**
  * WooCommerce: archive UI cleanup
  * - The shop layout is custom (lookbook + grid), so we hide default breadcrumb,
  *   result count, and ordering controls.
