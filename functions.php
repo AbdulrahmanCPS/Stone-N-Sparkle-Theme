@@ -94,6 +94,17 @@ add_action('wp', function () {
     }
 });
 
+/**
+ * WooCommerce single product: remove breadcrumb and product meta (category/SKU/tags).
+ */
+add_action('wp', function () {
+    if (!function_exists('is_product') || !is_product()) {
+        return;
+    }
+    remove_action('woocommerce_before_main_content', 'woocommerce_breadcrumb', 20);
+    remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_meta', 40);
+}, 20);
+
 // Remove related products from single product pages
 remove_action('woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20);
 
