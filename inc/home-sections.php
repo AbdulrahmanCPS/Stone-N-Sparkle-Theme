@@ -314,7 +314,10 @@ function ss_render_one_section_row($index, $images, $button_text, $button_url, $
                 }
                 ?>
                 </ul>
-                <p><button type="button" class="button ss-home-section-add-image"><?php esc_html_e('Add image', 'stone-sparkle'); ?></button></p>
+                <p class="ss-home-section-add-image-wrap">
+                    <button type="button" class="button button-secondary ss-home-section-add-image" aria-label="<?php esc_attr_e('Add another image to this section', 'stone-sparkle'); ?>"><?php esc_html_e('Add image', 'stone-sparkle'); ?> +</button>
+                    <span class="description"><?php esc_html_e('Add one or more images; order is the slide order.', 'stone-sparkle'); ?></span>
+                </p>
             </div>
             <div class="ss-home-section-field ss-home-section-show-button">
                 <label>
@@ -449,6 +452,8 @@ add_action('admin_enqueue_scripts', function ($hook) {
         .ss-home-section-image-handle { cursor:move; color:#787c82; user-select:none; }
         .ss-home-section-image-preview { margin:0; }
         .ss-home-section-image-preview img { border:1px solid #c3c4c7; border-radius:4px; }
+        .ss-home-section-add-image-wrap { margin:10px 0 0; padding:10px; background:#f0f0f1; border:1px dashed #c3c4c7; border-radius:4px; }
+        .ss-home-section-add-image-wrap .ss-home-section-add-image { margin-right:8px; }
     ');
 });
 
