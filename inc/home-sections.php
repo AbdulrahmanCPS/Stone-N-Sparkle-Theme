@@ -224,7 +224,7 @@ function ss_render_home_sections_meta_box($post, $args) {
     echo '</div>';
 
     echo '<template id="ss-home-section-row-tpl">';
-    ss_render_one_section_row('{{INDEX}}', '', '', '', '_self', true);
+    ss_render_one_section_row('{{INDEX}}', '', '', '', '_self', true, true);
     echo '</template>';
 }
 
@@ -237,11 +237,12 @@ function ss_render_home_sections_meta_box($post, $args) {
  * @param string $button_url Button URL.
  * @param string $button_target _self or _blank.
  * @param bool $show_button Whether to show the section button on the front end.
+ * @param bool $inner_only If true, output only the inner content (no <li> wrapper). Use for the <template> so JS can inject into a single <li>.
  */
-function ss_render_one_section_row($index, $image, $button_text, $button_url, $button_target, $show_button = true) {
+function ss_render_one_section_row($index, $image, $button_text, $button_url, $button_target, $show_button = true, $inner_only = false) {
     $name_prefix = 'ss_home_sections[' . $index . ']';
-    ?>
-    <li class="ss-home-section-row" data-index="<?php echo esc_attr((string) $index); ?>">
+    $inner = function () use ($name_prefix, $image, $button_text, $button_url, $button_target, $show_button) {
+        ?>
         <span class="ss-home-section-handle" aria-label="<?php esc_attr_e('Drag to reorder', 'stone-sparkle'); ?>">⋮⋮</span>
         <div class="ss-home-section-fields">
             <div class="ss-home-section-field ss-home-section-image">
@@ -279,6 +280,16 @@ function ss_render_one_section_row($index, $image, $button_text, $button_url, $b
             </div>
         </div>
         <button type="button" class="button ss-home-section-remove" aria-label="<?php esc_attr_e('Remove section', 'stone-sparkle'); ?>"><?php esc_html_e('Remove', 'stone-sparkle'); ?></button>
+        <?php
+    };
+
+    if ($inner_only) {
+        $inner();
+        return;
+    }
+    ?>
+    <li class="ss-home-section-row" data-index="<?php echo esc_attr((string) $index); ?>">
+    <?php $inner(); ?>
     </li>
     <?php
 }
