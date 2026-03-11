@@ -1,5 +1,5 @@
 /**
- * Homepage Sections meta box: add/remove/reorder rows, media picker for image.
+ * Homepage Sections meta box: sections and per-section images (add/remove/reorder), media picker.
  */
 (function () {
     'use strict';
@@ -8,13 +8,15 @@
     if (!container) return;
 
     var list = document.getElementById('ss-home-sections-list');
-    var tpl = document.getElementById('ss-home-section-row-tpl');
-    var addBtn = document.getElementById('ss-home-sections-add');
-    if (!list || !tpl || !addBtn) return;
+    var rowTpl = document.getElementById('ss-home-section-row-tpl');
+    var imageSlotTpl = document.getElementById('ss-home-section-image-slot-tpl');
+    var addSectionBtn = document.getElementById('ss-home-sections-add');
+    if (!list || !rowTpl || !addSectionBtn) return;
 
-    var rowHtml = tpl.innerHTML;
+    var rowHtml = rowTpl.innerHTML;
+    var imageSlotHtml = imageSlotTpl ? imageSlotTpl.innerHTML : '';
 
-    function nextIndex() {
+    function nextSectionIndex() {
         var rows = list.querySelectorAll('.ss-home-section-row');
         var max = -1;
         rows.forEach(function (row) {
@@ -28,45 +30,85 @@
         var rows = list.querySelectorAll('.ss-home-section-row');
         rows.forEach(function (row, i) {
             row.setAttribute('data-index', String(i));
-            var prefix = 'ss_home_sections[' + i + ']';
             row.querySelectorAll('[name^="ss_home_sections["]').forEach(function (input) {
                 var name = input.getAttribute('name');
                 if (!name) return;
-                var match = name.match(/\]\[([^\]]+)\]$/);
-                if (match) input.setAttribute('name', prefix + '[' + match[1] + ']');
+                input.setAttribute('name', name.replace(/^(ss_home_sections)\[\d+\]/, '$1[' + i + ']'));
             });
         });
     }
 
-    function addRow() {
-        var idx = nextIndex();
+    function reindexImageSlotsInRow(row) {
+        var ul = row.querySelector('.ss-home-section-images-list');
+        if (!ul) return;
+        var slots = ul.querySelectorAll('.ss-home-section-image-slot');
+        slots.forEach(function (slot, j) {
+            slot.setAttribute('data-image-index', String(j));
+            slot.querySelectorAll('.ss-home-section-input-image-url, .ss-home-section-input-image-alt').forEach(function (input) {
+                var name = input.getAttribute('name');
+                if (!name) return;
+                var m = name.match(/^(ss_home_sections\[\d+\]\[images\])\[\d+\](\[url\]|\[alt\])$/);
+                if (m) input.setAttribute('name', m[1] + '[' + j + ']' + m[2]);
+            });
+        });
+    }
+
+    function addSectionRow() {
+        var idx = nextSectionIndex();
         var html = rowHtml.replace(/\{\{INDEX\}\}/g, String(idx));
         var li = document.createElement('li');
         li.className = 'ss-home-section-row';
         li.setAttribute('data-index', String(idx));
         li.innerHTML = html;
         list.appendChild(li);
-        bindRowActions(li);
+        bindSectionRowActions(li);
         reindexRows();
     }
 
-    function removeRow(ev) {
+    function removeSectionRow(ev) {
         var row = ev.target.closest('.ss-home-section-row');
         if (row) row.remove();
         reindexRows();
     }
 
-    function bindRowActions(row) {
-        if (!row || row._bound) return;
-        row._bound = true;
+    function addImageSlot(row) {
+        if (!imageSlotHtml) return;
+        var ul = row.querySelector('.ss-home-section-images-list');
+        if (!ul) return;
+        var sectionIndex = row.getAttribute('data-index');
+        var slots = ul.querySelectorAll('.ss-home-section-image-slot');
+        var imageIndex = slots.length;
+        var html = imageSlotHtml
+            .replace(/\{\{SECTION_INDEX\}\}/g, sectionIndex)
+            .replace(/\{\{IMAGE_INDEX\}\}/g, String(imageIndex));
+        var li = document.createElement('li');
+        li.className = 'ss-home-section-image-slot';
+        li.setAttribute('data-image-index', String(imageIndex));
+        li.innerHTML = html;
+        ul.appendChild(li);
+        bindImageSlotActions(li, row);
+        reindexImageSlotsInRow(row);
+    }
 
-        var uploadBtn = row.querySelector('.ss-home-section-upload');
-        var removeImgBtn = row.querySelector('.ss-home-section-remove-image');
-        var imageInput = row.querySelector('.ss-home-section-input-image');
-        var preview = row.querySelector('.ss-home-section-image-preview');
-        var removeRowBtn = row.querySelector('.ss-home-section-remove');
+    function removeImageSlot(ev) {
+        var slot = ev.target.closest('.ss-home-section-image-slot');
+        if (!slot) return;
+        var row = slot.closest('.ss-home-section-row');
+        slot.remove();
+        if (row) reindexImageSlotsInRow(row);
+    }
 
-        if (uploadBtn && imageInput && preview) {
+    function bindImageSlotActions(slot, row) {
+        if (!slot || slot._slotBound) return;
+        slot._slotBound = true;
+
+        var uploadBtn = slot.querySelector('.ss-home-section-upload');
+        var removeBtn = slot.querySelector('.ss-home-section-remove-image');
+        var urlInput = slot.querySelector('.ss-home-section-input-image-url');
+        var altInput = slot.querySelector('.ss-home-section-input-image-alt');
+        var preview = slot.querySelector('.ss-home-section-image-preview');
+
+        if (uploadBtn && urlInput && preview) {
             uploadBtn.addEventListener('click', function () {
                 var frame = wp.media({
                     title: 'Choose Lookbook Image',
@@ -77,33 +119,63 @@
                 frame.on('select', function () {
                     var att = frame.state().get('selection').first().toJSON();
                     var url = att.url || '';
-                    imageInput.value = url;
-                    preview.innerHTML = url ? '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" style="max-width:120px;height:auto;" />' : '';
-                    if (removeImgBtn) removeImgBtn.style.display = url ? '' : 'none';
+                    var alt = (att.alt && typeof att.alt === 'string') ? att.alt : '';
+                    urlInput.value = url;
+                    if (altInput) altInput.value = alt;
+                    preview.innerHTML = url ? '<img src="' + url.replace(/"/g, '&quot;') + '" alt="" style="max-width:80px;height:auto;" />' : '';
+                    if (removeBtn) removeBtn.style.display = url ? '' : 'none';
                 });
                 frame.open();
             });
         }
 
-        if (removeImgBtn && imageInput && preview) {
-            removeImgBtn.addEventListener('click', function () {
-                imageInput.value = '';
-                preview.innerHTML = '';
-                removeImgBtn.style.display = 'none';
-            });
-        }
-
-        if (removeRowBtn) {
-            removeRowBtn.addEventListener('click', removeRow);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', removeImageSlot);
         }
     }
 
-    // Bind existing rows
-    list.querySelectorAll('.ss-home-section-row').forEach(bindRowActions);
+    function bindSectionRowActions(row) {
+        if (!row || row._bound) return;
+        row._bound = true;
 
-    addBtn.addEventListener('click', addRow);
+        var removeRowBtn = row.querySelector('.ss-home-section-remove');
+        if (removeRowBtn) {
+            removeRowBtn.addEventListener('click', removeSectionRow);
+        }
 
-    // jQuery UI Sortable for reorder (theme enqueues jquery-ui-sortable)
+        var addImageBtn = row.querySelector('.ss-home-section-add-image');
+        if (addImageBtn) {
+            addImageBtn.addEventListener('click', function () {
+                addImageSlot(row);
+            });
+        }
+
+        var ul = row.querySelector('.ss-home-section-images-list');
+        if (ul) {
+            row.querySelectorAll('.ss-home-section-image-slot').forEach(function (slot) {
+                bindImageSlotActions(slot, row);
+            });
+            if (window.jQuery && window.jQuery.ui && window.jQuery.ui.sortable) {
+                window.jQuery(ul).sortable({
+                    handle: '.ss-home-section-image-handle',
+                    axis: 'y',
+                    update: function () {
+                        reindexImageSlotsInRow(row);
+                    }
+                });
+            }
+        }
+
+        row.querySelectorAll('.ss-home-section-upload, .ss-home-section-remove-image').forEach(function (btn) {
+            var slot = btn.closest('.ss-home-section-image-slot');
+            if (slot && !slot._slotBound) bindImageSlotActions(slot, row);
+        });
+    }
+
+    list.querySelectorAll('.ss-home-section-row').forEach(bindSectionRowActions);
+
+    addSectionBtn.addEventListener('click', addSectionRow);
+
     if (window.jQuery && window.jQuery.ui && window.jQuery.ui.sortable) {
         window.jQuery(list).sortable({
             handle: '.ss-home-section-handle',

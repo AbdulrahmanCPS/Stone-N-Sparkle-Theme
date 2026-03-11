@@ -545,6 +545,77 @@ html.ss-no-scroll body{ overflow:hidden; }
   height:100%;
   object-fit: cover;
 }
+
+/* Section image slider (multiple images per section) */
+.ss-section-slider{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  outline: none;
+}
+.ss-section-slider__track{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.ss-section-slider__slides{
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+.ss-section-slider__slide{
+  flex: 0 0 100%;
+  min-width: 100%;
+  height: 100%;
+}
+.ss-section-slider__slide img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ss-section-slider__prev,
+.ss-section-slider__next{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 50%;
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+.ss-section-slider__prev{ left: 12px; }
+.ss-section-slider__next{ right: 12px; }
+.ss-section-slider__prev:hover,
+.ss-section-slider__next:hover{
+  background: rgba(0,0,0,0.5);
+}
+.ss-section-slider__prev:focus,
+.ss-section-slider__next:focus{
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.ss-section-slider__counter{
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 10px;
+  background: rgba(0,0,0,0.4);
+  color: #fff;
+  font-size: 12px;
+  z-index: 2;
+}
+
 .ss-lookbook-btnwrap{display:flex;align-items:center;justify-content:flex-start;}
 .ss-btn{
   display:inline-flex;

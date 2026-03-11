@@ -72,11 +72,25 @@ function ss_get_home_sections($post_id) {
 /**
  * Normalize a single section row from stored JSON to template shape.
  *
- * @param array<string, mixed> $row Stored row (image, button_text, button_url, button_target, show_button).
- * @return array{img: string, cta: string, link: string, target: string, show_button: bool}
+ * @param array<string, mixed> $row Stored row (images or image, button_text, button_url, button_target, show_button).
+ * @return array{img: string, images: array<int, array{url: string, alt: string}>, cta: string, link: string, target: string, show_button: bool}
  */
 function ss_normalize_section_row(array $row) {
-    $img = isset($row['image']) ? (string) $row['image'] : '';
+    $images = [];
+    if (isset($row['images']) && is_array($row['images'])) {
+        foreach ($row['images'] as $entry) {
+            $url = isset($entry['url']) ? (string) $entry['url'] : '';
+            $alt = isset($entry['alt']) ? (string) $entry['alt'] : '';
+            if ($url !== '') {
+                $images[] = ['url' => $url, 'alt' => $alt];
+            }
+        }
+    }
+    if (empty($images) && isset($row['image']) && (string) $row['image'] !== '') {
+        $images[] = ['url' => (string) $row['image'], 'alt' => ''];
+    }
+    $img = !empty($images) ? $images[0]['url'] : '';
+
     $cta = isset($row['button_text']) ? (string) $row['button_text'] : '';
     $url = isset($row['button_url']) ? (string) $row['button_url'] : '';
     $target = isset($row['button_target']) ? (string) $row['button_target'] : '';
@@ -100,6 +114,7 @@ function ss_normalize_section_row(array $row) {
 
     return [
         'img'         => $img,
+        'images'      => $images,
         'cta'         => $cta,
         'link'        => $url,
         'target'      => $target,
@@ -147,7 +162,7 @@ function ss_migrate_legacy_home_sections($post_id) {
         }
 
         $out[] = [
-            'image'         => $img,
+            'images'        => $img !== '' ? [['url' => $img, 'alt' => '']] : [],
             'button_text'   => $btn_text,
             'button_url'    => $url,
             'button_target' => $target,
@@ -204,19 +219,19 @@ function ss_render_home_sections_meta_box($post, $args) {
     $sections = ss_get_home_sections($post->ID);
 
     echo '<p class="description" style="margin-bottom:12px;">';
-    esc_html_e('Use <strong>Add Section</strong> to add a row. Set image (optional), button text, and link. Drag to reorder. Save/Update the page to apply changes.', 'stone-sparkle');
+    esc_html_e('Use <strong>Add Section</strong> to add a row. Under <strong>Images</strong> add one or more images; order here is the slide order. With multiple images the section becomes a horizontal slider. Drag to reorder sections and images. Save/Update to apply.', 'stone-sparkle');
     echo '</p>';
 
     echo '<div id="ss-home-sections-container">';
     echo '<ul id="ss-home-sections-list" class="ss-home-sections-list">';
 
     foreach ($sections as $index => $section) {
-        $img = isset($section['img']) ? $section['img'] : '';
+        $images = isset($section['images']) && is_array($section['images']) ? $section['images'] : [];
         $cta = isset($section['cta']) ? $section['cta'] : '';
         $link = isset($section['link']) ? $section['link'] : '';
         $target = isset($section['target']) ? $section['target'] : '_self';
         $show_btn = isset($section['show_button']) ? (bool) $section['show_button'] : true;
-        ss_render_one_section_row($index, $img, $cta, $link, $target, $show_btn);
+        ss_render_one_section_row($index, $images, $cta, $link, $target, $show_btn);
     }
 
     echo '</ul>';
@@ -224,37 +239,82 @@ function ss_render_home_sections_meta_box($post, $args) {
     echo '</div>';
 
     echo '<template id="ss-home-section-row-tpl">';
-    ss_render_one_section_row('{{INDEX}}', '', '', '', '_self', true, true);
+    ss_render_one_section_row('{{INDEX}}', [], '', '', '_self', true, true);
     echo '</template>';
+
+    echo '<template id="ss-home-section-image-slot-tpl">';
+    ss_render_one_image_slot('{{SECTION_INDEX}}', '{{IMAGE_INDEX}}', '', '', true);
+    echo '</template>';
+}
+
+/**
+ * Output a single image slot (one item in the section's images list).
+ *
+ * @param string|int $section_index Section index.
+ * @param string|int $image_index Image index.
+ * @param string $url Image URL.
+ * @param string $alt Alt text.
+ * @param bool $inner_only If true, output only inner content (for JS template clone into <li>).
+ */
+function ss_render_one_image_slot($section_index, $image_index, $url, $alt, $inner_only = false) {
+    $prefix = 'ss_home_sections[' . $section_index . '][images][' . $image_index . ']';
+    $inner = function () use ($prefix, $url, $alt) {
+        ?>
+        <span class="ss-home-section-image-handle" aria-label="<?php esc_attr_e('Drag to reorder image', 'stone-sparkle'); ?>">⋮⋮</span>
+        <input type="hidden" name="<?php echo esc_attr($prefix); ?>[url]" class="ss-home-section-input-image-url" value="<?php echo esc_attr($url); ?>" />
+        <input type="hidden" name="<?php echo esc_attr($prefix); ?>[alt]" class="ss-home-section-input-image-alt" value="<?php echo esc_attr($alt); ?>" />
+        <div class="ss-home-section-image-preview">
+            <?php if ($url !== '') : ?>
+                <img src="<?php echo esc_url($url); ?>" alt="" style="max-width:80px;height:auto;" />
+            <?php endif; ?>
+        </div>
+        <button type="button" class="button ss-home-section-upload"><?php esc_html_e('Select image', 'stone-sparkle'); ?></button>
+        <button type="button" class="button ss-home-section-remove-image" <?php echo $url === '' ? ' style="display:none;"' : ''; ?>><?php esc_html_e('Remove', 'stone-sparkle'); ?></button>
+        <?php
+    };
+    if ($inner_only) {
+        $inner();
+        return;
+    }
+    ?>
+    <li class="ss-home-section-image-slot" data-image-index="<?php echo esc_attr((string) $image_index); ?>">
+        <?php $inner(); ?>
+    </li>
+    <?php
 }
 
 /**
  * Output a single section row (for existing data or template clone).
  *
  * @param string|int $index Row index or placeholder.
- * @param string $image Image URL.
+ * @param array<int, array{url: string, alt: string}> $images Array of image url/alt.
  * @param string $button_text Button label.
  * @param string $button_url Button URL.
  * @param string $button_target _self or _blank.
  * @param bool $show_button Whether to show the section button on the front end.
  * @param bool $inner_only If true, output only the inner content (no <li> wrapper). Use for the <template> so JS can inject into a single <li>.
  */
-function ss_render_one_section_row($index, $image, $button_text, $button_url, $button_target, $show_button = true, $inner_only = false) {
+function ss_render_one_section_row($index, $images, $button_text, $button_url, $button_target, $show_button = true, $inner_only = false) {
     $name_prefix = 'ss_home_sections[' . $index . ']';
-    $inner = function () use ($name_prefix, $image, $button_text, $button_url, $button_target, $show_button) {
+    $inner = function () use ($name_prefix, $index, $images, $button_text, $button_url, $button_target, $show_button) {
         ?>
         <span class="ss-home-section-handle" aria-label="<?php esc_attr_e('Drag to reorder', 'stone-sparkle'); ?>">⋮⋮</span>
         <div class="ss-home-section-fields">
-            <div class="ss-home-section-field ss-home-section-image">
-                <label><?php esc_html_e('Image', 'stone-sparkle'); ?></label>
-                <input type="hidden" name="<?php echo esc_attr($name_prefix); ?>[image]" class="ss-home-section-input-image" value="<?php echo esc_attr($image); ?>" />
-                <div class="ss-home-section-image-preview">
-                    <?php if ($image !== '') : ?>
-                        <img src="<?php echo esc_url($image); ?>" alt="" style="max-width:120px;height:auto;" />
-                    <?php endif; ?>
-                </div>
-                <button type="button" class="button ss-home-section-upload"><?php esc_html_e('Select image', 'stone-sparkle'); ?></button>
-                <button type="button" class="button ss-home-section-remove-image" <?php echo $image === '' ? ' style="display:none;"' : ''; ?>><?php esc_html_e('Remove image', 'stone-sparkle'); ?></button>
+            <div class="ss-home-section-field ss-home-section-images">
+                <label><?php esc_html_e('Images (slider on front)', 'stone-sparkle'); ?></label>
+                <p class="description"><?php esc_html_e('Add one or more images. Order here is the slide order. With multiple images, the section becomes a horizontal slider.', 'stone-sparkle'); ?></p>
+                <ul class="ss-home-section-images-list">
+                <?php
+                if (!empty($images)) {
+                    foreach ($images as $j => $img) {
+                        $u = isset($img['url']) ? $img['url'] : '';
+                        $a = isset($img['alt']) ? $img['alt'] : '';
+                        ss_render_one_image_slot($index, $j, $u, $a, false);
+                    }
+                }
+                ?>
+                </ul>
+                <p><button type="button" class="button ss-home-section-add-image"><?php esc_html_e('Add image', 'stone-sparkle'); ?></button></p>
             </div>
             <div class="ss-home-section-field ss-home-section-show-button">
                 <label>
@@ -318,7 +378,17 @@ add_action('save_post_page', function ($post_id) {
         if (!is_array($row)) {
             continue;
         }
-        $image = isset($row['image']) ? esc_url_raw(sanitize_text_field(wp_unslash($row['image']))) : '';
+        $images = [];
+        if (isset($row['images']) && is_array($row['images'])) {
+            foreach ($row['images'] as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $u = isset($entry['url']) ? esc_url_raw(sanitize_text_field(wp_unslash($entry['url']))) : '';
+                $a = isset($entry['alt']) ? sanitize_text_field(wp_unslash($entry['alt'])) : '';
+                $images[] = ['url' => $u, 'alt' => $a];
+            }
+        }
         $button_text = isset($row['button_text']) ? sanitize_text_field(wp_unslash($row['button_text'])) : '';
         $button_url = isset($row['button_url']) ? esc_url_raw(sanitize_text_field(wp_unslash($row['button_url']))) : '';
         $button_target = isset($row['button_target']) ? sanitize_text_field(wp_unslash($row['button_target'])) : '_self';
@@ -327,7 +397,7 @@ add_action('save_post_page', function ($post_id) {
         }
         $show_button = isset($row['show_button']) && ( $row['show_button'] === '1' || $row['show_button'] === true ) ? 1 : 0;
         $sections[] = [
-            'image'         => $image,
+            'images'        => $images,
             'button_text'   => $button_text,
             'button_url'    => $button_url,
             'button_target' => $button_target,
@@ -374,7 +444,26 @@ add_action('admin_enqueue_scripts', function ($hook) {
         .ss-home-section-handle { cursor:move; color:#787c82; padding:4px 6px; user-select:none; }
         .ss-home-section-fields { flex:1; display:grid; gap:10px; }
         .ss-home-section-field label { display:block; font-weight:600; margin-bottom:4px; }
-        .ss-home-section-image-preview { margin-bottom:8px; }
+        .ss-home-section-images-list { list-style:none; margin:8px 0; padding:0; }
+        .ss-home-section-image-slot { display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px; background:#fff; border:1px solid #c3c4c7; border-radius:4px; }
+        .ss-home-section-image-handle { cursor:move; color:#787c82; user-select:none; }
+        .ss-home-section-image-preview { margin:0; }
         .ss-home-section-image-preview img { border:1px solid #c3c4c7; border-radius:4px; }
     ');
 });
+
+/**
+ * Enqueue front-end slider script on homepage.
+ */
+add_action('wp_enqueue_scripts', function () {
+    if (!is_page('home-page') && !is_front_page()) {
+        return;
+    }
+    wp_enqueue_script(
+        'ss-home-section-slider',
+        get_template_directory_uri() . '/assets/js/home-section-slider.js',
+        [],
+        defined('SS_THEME_VERSION') ? SS_THEME_VERSION : '1.0',
+        true
+    );
+}, 20);
