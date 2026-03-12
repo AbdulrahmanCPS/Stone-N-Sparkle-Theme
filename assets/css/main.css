@@ -1335,38 +1335,74 @@ html.ss-no-scroll body{ overflow:hidden; }
   padding: 16px 0;
 }
 
-/* Collection page: lookbook slightly left of center (asymmetric balance) */
-.ss-collection-page .ss-shop-lookbook .ss-container {
-  margin-left: 6%;
+/* Collection page: same lookbook as shop + products align to same start (osh.jewelry-style) */
+.ss-collection-page .ss-shop-lookbook .ss-container,
+.ss-collection-page .ss-shop-products .ss-container {
+  width: min(var(--ss-max), calc(100% - 48px));
+  margin-left: auto;
   margin-right: auto;
-  max-width: 88%;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
 }
-.ss-collection-page .ss-shop-lookbook--bottom .ss-container {
-  margin-left: 6%;
+/* Cap lookbook image size on collection page so they don’t dominate */
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-item,
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-item--shop {
+  display: block;
+  margin: 0 auto;
+  width: min(608.867px, 100%);
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-card {
+  width: min(608.867px, 100%);
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-media {
+  width: 100%;
+  max-width: 608.867px;
+  height: 814.483px;
+  aspect-ratio: 608.867 / 814.483;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--2 {
+  grid-template-columns: repeat(2, min(608.867px, 1fr));
+  justify-content: center;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--3 {
+  grid-template-columns: repeat(3, min(608.867px, 1fr));
+  justify-content: center;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 {
+  grid-template-columns: 1fr;
+  max-width: 640px;
+  margin-left: auto;
   margin-right: auto;
+}
+@media (max-width: 660px) {
+  .ss-collection-page .ss-shop-lookbook .ss-lookbook-media {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 608.867 / 814.483;
+  }
 }
 
-/* Collection page: product grid — same compact sizing as shop (no .woocommerce wrapper on CPT) */
-.ss-collection-page .ss-shop-products .ss-container {
-  margin-left: 0;
-  margin-right: auto;
-  max-width: 1200px;
-  padding-left: 24px;
-}
+/* Collection page: product grid (no .woocommerce wrapper on CPT) */
 .ss-collection-page .ss-shop-products ul.products,
 .ss-collection-page .ss-shop-products ul.ss-products {
   list-style: none;
   margin: 32px 0 80px;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 213px);
-  gap: 32px;
+  grid-template-columns: repeat(3, 280px);
+  gap: 40px;
   justify-content: flex-start;
   width: 100%;
 }
 .ss-collection-page .ss-shop-products ul.products li.ss-product-card,
 .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card {
-  width: 213px;
+  width: 280px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -1384,20 +1420,20 @@ html.ss-no-scroll body{ overflow:hidden; }
 .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-link {
   display: flex;
   flex-direction: column;
-  width: 213px;
-  height: 382px;
+  width: 280px;
+  height: 420px;
   text-decoration: none;
   color: inherit;
 }
 .ss-collection-page .ss-shop-products ul.products li.ss-product-card .ss-product-media,
 .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-media {
-  width: 213px;
+  width: 280px;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px;
+  padding: 16px;
   background: #ffffff;
   border: 1px solid rgba(61,19,23,0.10);
   border-bottom: 0;
@@ -1414,7 +1450,7 @@ html.ss-no-scroll body{ overflow:hidden; }
 .ss-collection-page .ss-shop-products ul.products li.ss-product-card .ss-product-meta,
 .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-meta {
   flex: 0 0 auto;
-  padding: 12px 14px 16px;
+  padding: 14px 16px 18px;
   background: #ffffff;
   border: 1px solid rgba(61,19,23,0.10);
   border-top: 1px solid rgba(61,19,23,0.06);
@@ -1423,8 +1459,8 @@ html.ss-no-scroll body{ overflow:hidden; }
 }
 .ss-collection-page .ss-shop-products ul.products li.ss-product-card .ss-product-title,
 .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-title {
-  margin: 0 0 6px;
-  font-size: 11px;
+  margin: 0 0 8px;
+  font-size: 12px;
   letter-spacing: 1.6px;
   text-transform: uppercase;
   line-height: 1.25;
@@ -1433,7 +1469,7 @@ html.ss-no-scroll body{ overflow:hidden; }
 }
 .ss-collection-page .ss-shop-products ul.products li.ss-product-card .ss-product-price,
 .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-price {
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.85;
   color: var(--ss-text);
   font-weight: 400;
@@ -1443,12 +1479,13 @@ html.ss-no-scroll body{ overflow:hidden; }
 @media (max-width: 900px) {
   .ss-collection-page .ss-shop-products ul.products,
   .ss-collection-page .ss-shop-products ul.ss-products {
-    grid-template-columns: repeat(2, 213px);
+    grid-template-columns: repeat(2, 280px);
   }
 }
 @media (max-width: 600px) {
-  .ss-collection-page .ss-shop-lookbook .ss-container {
-    margin-left: 0;
+  .ss-collection-page .ss-shop-lookbook .ss-lookbook-item,
+  .ss-collection-page .ss-shop-lookbook .ss-lookbook-card,
+  .ss-collection-page .ss-shop-lookbook .ss-lookbook-media {
     max-width: 100%;
   }
   .ss-collection-page .ss-shop-products ul.products,
@@ -1459,15 +1496,16 @@ html.ss-no-scroll body{ overflow:hidden; }
   .ss-collection-page .ss-shop-products ul.products li.ss-product-card,
   .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card {
     width: 100%;
-    max-width: 280px;
+    max-width: 320px;
     margin: 0 auto;
   }
   .ss-collection-page .ss-shop-products ul.products li.ss-product-card .ss-product-link,
   .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-link {
     width: 100%;
-    max-width: 280px;
+    max-width: 320px;
     height: auto;
-    min-height: 382px;
+    min-height: 420px;
+    margin: 0 auto;
   }
   .ss-collection-page .ss-shop-products ul.products li.ss-product-card .ss-product-media,
   .ss-collection-page .ss-shop-products ul.ss-products li.ss-product-card .ss-product-media {
