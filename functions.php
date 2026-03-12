@@ -1292,6 +1292,12 @@ require_once get_template_directory() . '/category-lookbook-fields.php';
 require_once get_template_directory() . '/inc/home-sections.php';
 
 /**
+ * Collection Pages CPT and fields (term, lookbook before/after)
+ */
+require_once get_template_directory() . '/inc/collection-page-cpt.php';
+require_once get_template_directory() . '/inc/collection-page-fields.php';
+
+/**
  * Single product: title row wrapper so we can place wishlist inline with title.
  */
 add_action('woocommerce_single_product_summary', function () {
