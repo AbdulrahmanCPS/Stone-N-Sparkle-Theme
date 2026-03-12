@@ -1311,6 +1311,30 @@ html.ss-no-scroll body{ overflow:hidden; }
   }
 }
 
+/* Collection page: hero and utilities */
+.ss-collection-page .ss-collection-hero {
+  padding: 32px 0 24px;
+}
+.ss-collection-page .ss-collection-title {
+  margin: 0 0 16px;
+}
+.ss-collection-page .ss-collection-featured {
+  margin-bottom: 20px;
+}
+.ss-collection-page .ss-collection-featured img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.ss-collection-page .ss-collection-empty {
+  padding: 24px 0;
+  color: #666;
+}
+.ss-collection-page .ss-collection-pagination {
+  margin-top: 24px;
+  padding: 16px 0;
+}
+
 .ss-shop-products {
   padding: 20px 0 64px;
 }
