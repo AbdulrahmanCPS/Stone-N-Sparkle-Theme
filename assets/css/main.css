@@ -1539,22 +1539,53 @@ html.ss-no-scroll body{ overflow:hidden; }
   .single-product div.product::after{ content: none; }
 }
 
+/* Mobile single product: horizontal breathing space + variation alignment */
+@media (max-width: 768px){
+  .single-product .woocommerce div.product{
+    width: 100%;
+    max-width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+  .single-product div.product div.images{
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .single-product .variations td.label{
+    height: var(--ss-pill-h);
+    min-height: var(--ss-pill-h);
+    display: flex !important;
+    align-items: center;
+  }
+  .single-product .variations td.value{
+    align-items: center;
+  }
+}
+
 /* Title row: product title + inline wishlist (editorial hierarchy) */
 .single-product .ss-pdp-title-row{
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 10px 16px;
   margin-bottom: 0;
+  text-align: center;
 }
 .single-product .ss-pdp-title-row .product_title{
   margin: 0;
   flex: 0 1 auto;
+  width: 100%;
+  text-align: center;
 }
 .single-product .ss-pdp-wishlist-inline{
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  text-align: center;
   font-family: var(--ss-pill-font);
   font-size: 15px;
   font-weight: 600;
@@ -1589,6 +1620,13 @@ html.ss-no-scroll body{ overflow:hidden; }
 .single-product .ss-pdp-title-row .yith-wcwl-add-button a:hover,
 .single-product .ss-pdp-title-row .add_to_wishlist:hover,
 .single-product .ss-pdp-title-row a[href*="wishlist"]:hover{ color: var(--ss-wine); }
+
+/* Summary price: padding so it does not stick to the left, centered */
+.single-product div.summary p.price{
+  padding-left: 1rem;
+  padding-right: 1rem;
+  text-align: center;
+}
 
 /* Short description: outlined container so it reads as its own section above actions */
 .single-product .woocommerce-product-details__short-description,
@@ -1653,6 +1691,7 @@ body.single-product .woocommerce .variations .label,
   min-height: var(--ss-pill-h);
   display: flex !important;
   align-items: center;
+  justify-content: center;
   padding-left: 0 !important;
   margin: 0 !important;
   font-family: var(--ss-pill-font) !important;
@@ -1660,6 +1699,7 @@ body.single-product .woocommerce .variations .label,
   font-weight: 500 !important;
   color: var(--ss-text) !important;
   line-height: 1.2 !important;
+  text-align: center !important;
 }
 body.single-product .woocommerce .variations .value,
 .single-product .variations .value{
@@ -1669,6 +1709,11 @@ body.single-product .woocommerce .variations .value,
   align-items: center;
   padding-left: 0 !important;
   margin-left: 0 !important;
+}
+/* Variation price (single variation): centered */
+.single-product .woocommerce-variation-price .price,
+.single-product .woocommerce-variation-price{
+  text-align: center;
 }
 /* Solid opaque dropdown: white fill + gradient ring so it’s always visible */
 body.single-product .woocommerce .variations .value select,

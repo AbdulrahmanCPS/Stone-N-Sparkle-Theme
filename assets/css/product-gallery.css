@@ -49,8 +49,36 @@
   overflow:hidden;
   position:relative;
   border-radius:18px;
+  touch-action: pan-y;
 }
 
+/* Slider track: horizontal strip of slides (used when JS builds it) */
+.ss-stage-track{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  height: 100%;
+  position: relative;
+  will-change: transform;
+}
+/* Slide width is set in JS to viewport width (px) so each slide fills exactly one viewport */
+.ss-stage-slide{
+  flex: 0 0 auto;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.ss-stage-slide img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* Fallback when track not yet built: single image */
 .ss-stage-image{
   width:100%;
   height:100%;
@@ -79,7 +107,7 @@
   height:40px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,0.55);
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.2);
   color:#fff;
   font-size:26px;
   line-height:1;
@@ -94,8 +122,28 @@
 .ss-gallery-next{ right:12px; }
 
 @media (max-width: 768px){
-  .ss-product-gallery{ flex-direction:column; }
-  .ss-product-thumbs{ flex-direction:row; width:auto; order:2; }
+  .ss-product-gallery{
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ss-product-stage{
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .ss-stage-viewport{
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1/1;
+  }
+  .ss-product-thumbs{ display: none !important; }
   .ss-thumb-btn{ width:64px; height:64px; }
-  .ss-stage-viewport{ width:min(576px, 100%); height:auto; aspect-ratio:1/1; }
+}
+
+/* Smooth snap when slider settles */
+.ss-stage-track.is-snapping{
+  transition: transform 0.3s ease-out;
 }
