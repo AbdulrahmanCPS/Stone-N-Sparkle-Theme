@@ -401,6 +401,12 @@ html.ss-no-scroll body{ overflow:hidden; }
   content: none !important;
   display: none !important;
 }
+/* Remove product grid placeholder so first slot is filled by first product (shop + category) */
+ul.products.ss-products::before,
+ul.products.columns-4.ss-products::before {
+  content: none !important;
+  display: none !important;
+}
 .woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .u-column1,
 .woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .u-column2,
 .woocommerce-account .woocommerce-MyAccount-content .col2-set.addresses .woocommerce-Address,
@@ -1311,12 +1317,88 @@ html.ss-no-scroll body{ overflow:hidden; }
   }
 }
 
+/* ── Additional CSS (from Customizer): fixed lookbook sizes + product grid alignment ── */
+/* Fix all lookbook images to exactly 608.867 x 814.483px (desktop) */
+.ss-shop-lookbook .ss-lookbook-media,
+.ss-lookbook-grid .ss-lookbook-media {
+  width: 608.867px !important;
+  max-width: 100% !important;
+  height: 814.483px !important;
+  aspect-ratio: unset !important;
+}
+
+/* Grid container: keep centered layout */
+.ss-lookbook-grid {
+  justify-content: center !important;
+}
+
+/* For the 2-up and 3-up grids, cap columns so cards don't stretch beyond that width */
+.ss-lookbook-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 608.867px)) !important;
+  justify-content: center !important;
+}
+
+.ss-lookbook-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 608.867px)) !important;
+  justify-content: center !important;
+}
+
+/* Ensure the image fills the fixed media box */
+.ss-shop-lookbook .ss-lookbook-media img,
+.ss-lookbook-grid .ss-lookbook-media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Mobile: let them shrink naturally */
+@media (max-width: 660px) {
+  .ss-shop-lookbook .ss-lookbook-media,
+  .ss-lookbook-grid .ss-lookbook-media {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 608.867 / 814.483 !important;
+  }
+}
+
+/* Align products grid to the left (ul.products is GRID in main CSS) */
+.ss-shop-products .ss-container {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  padding-left: 24px !important;
+}
+
+/* Grid alignment: left */
+.woocommerce ul.products.ss-products,
+.woocommerce ul.products {
+  justify-content: flex-start !important;
+  justify-content: start !important;
+  margin-left: 0 !important;
+}
+
 /* Collection page: hero and utilities */
 .ss-collection-page .ss-collection-hero {
   padding: 32px 0 24px;
 }
 .ss-collection-page .ss-collection-title {
   margin: 0 0 16px;
+}
+
+/* Hide main page title visually on collection, shop, category (keep in DOM for SEO / screen readers) */
+.ss-collection-page .ss-collection-title,
+.ss-shop .woocommerce-products-header__title,
+.ss-shop .woocommerce-products-header h1,
+.ss-category-archive .woocommerce-products-header__title,
+.ss-category-archive .woocommerce-products-header h1 {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 .ss-collection-page .ss-collection-featured {
   margin-bottom: 20px;
@@ -1345,20 +1427,200 @@ html.ss-no-scroll body{ overflow:hidden; }
   padding-right: 24px;
   box-sizing: border-box;
 }
+/* So product grid first item starts under lookbook left edge: center products container like lookbook (override .ss-shop-products .ss-container margin-left: 0) */
+.ss-collection-page .ss-shop-products .ss-container {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Shop page: mimic collection look — centered container, same lookbook sizing, grid under lookbook */
+.ss-shop .ss-shop-lookbook .ss-container,
+.ss-shop .ss-shop-products .ss-container {
+  width: min(var(--ss-max), calc(100% - 48px));
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-item,
+.ss-shop .ss-shop-lookbook .ss-lookbook-item--shop {
+  display: block;
+  margin: 0;
+  width: min(480px, 100%);
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-card {
+  width: min(480px, 100%);
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-media {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  aspect-ratio: 608.867 / 814.483;
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-grid {
+  gap: 48px;
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-grid--2 {
+  grid-template-columns: repeat(2, min(480px, 1fr));
+  justify-content: start;
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-grid--3 {
+  grid-template-columns: repeat(3, min(480px, 1fr));
+  justify-content: start;
+}
+.ss-shop .ss-shop-lookbook .ss-lookbook-grid--1 {
+  grid-template-columns: 1fr;
+  max-width: 480px;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Category page: mimic collection look — centered containers so content aligns */
+.ss-category-archive .ss-container {
+  width: min(var(--ss-max), calc(100% - 48px));
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+
+/* Category page: same product grid and cards as collection (all product category archives) */
+.ss-category-archive .ss-category-products {
+  padding-top: 0;
+}
+.ss-category-archive .ss-category-products ul.products,
+.ss-category-archive .ss-category-products ul.ss-products {
+  list-style: none;
+  margin: 32px 0 80px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 280px);
+  gap: 40px;
+  justify-content: flex-start;
+  width: 100%;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card {
+  width: 280px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  transition: transform 0.24s ease;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card:hover,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card:hover {
+  transform: translateY(-4px);
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-link,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-link {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  height: 420px;
+  text-decoration: none;
+  color: inherit;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-media,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-media {
+  width: 280px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(61,19,23,0.10);
+  border-bottom: 0;
+  box-shadow: 0 4px 5px rgba(199,199,199,0);
+  overflow: hidden;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-media img,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-meta,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-meta {
+  flex: 0 0 auto;
+  padding: 14px 16px 18px;
+  background: #ffffff;
+  border: 1px solid rgba(61,19,23,0.10);
+  border-top: 1px solid rgba(61,19,23,0.06);
+  text-align: left;
+  margin: 0;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-title,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  line-height: 1.25;
+  color: var(--ss-text);
+  font-weight: 400;
+}
+.ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-price,
+.ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-price {
+  font-size: 13px;
+  opacity: 0.85;
+  color: var(--ss-text);
+  font-weight: 400;
+}
+@media (max-width: 900px) {
+  .ss-category-archive .ss-category-products ul.products,
+  .ss-category-archive .ss-category-products ul.ss-products {
+    grid-template-columns: repeat(2, 280px);
+  }
+}
+@media (max-width: 600px) {
+  .ss-category-archive .ss-category-products ul.products,
+  .ss-category-archive .ss-category-products ul.ss-products {
+    grid-template-columns: 1fr;
+    justify-content: center;
+  }
+  .ss-category-archive .ss-category-products ul.products li.ss-product-card,
+  .ss-category-archive .ss-category-products ul.ss-products li.ss-product-card {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-link,
+  .ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-link {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    min-height: 420px;
+    margin: 0 auto;
+  }
+  .ss-category-archive .ss-category-products ul.products li.ss-product-card .ss-product-media,
+  .ss-category-archive .ss-category-products ul.ss-products li.ss-product-card .ss-product-media {
+    width: 100%;
+  }
+}
+
 /* Cap lookbook image size on collection page so they don’t dominate */
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-item,
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-item--shop {
   display: block;
-  margin: 0 auto;
-  width: min(608.867px, 100%);
+  margin: 0;
+  width: min(480px, 100%);
 }
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-card {
-  width: min(608.867px, 100%);
+  width: min(480px, 100%);
 }
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-media {
   width: 100%;
-  max-width: 608.867px;
-  height: 814.483px;
+  max-width: 480px;
+  height: auto;
   aspect-ratio: 608.867 / 814.483;
 }
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-media img {
@@ -1366,18 +1628,22 @@ html.ss-no-scroll body{ overflow:hidden; }
   height: 100%;
   object-fit: cover;
 }
+/* More vertical padding between lookbook images on collection page */
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid {
+  gap: 48px;
+}
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--2 {
-  grid-template-columns: repeat(2, min(608.867px, 1fr));
-  justify-content: center;
+  grid-template-columns: repeat(2, min(480px, 1fr));
+  justify-content: start;
 }
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--3 {
-  grid-template-columns: repeat(3, min(608.867px, 1fr));
-  justify-content: center;
+  grid-template-columns: repeat(3, min(480px, 1fr));
+  justify-content: start;
 }
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 {
   grid-template-columns: 1fr;
-  max-width: 640px;
-  margin-left: auto;
+  max-width: 480px;
+  margin-left: 0;
   margin-right: auto;
 }
 @media (max-width: 660px) {
@@ -1515,6 +1781,10 @@ html.ss-no-scroll body{ overflow:hidden; }
 
 .ss-shop-products {
   padding: 20px 0 64px;
+}
+
+.ss-collection-page .ss-shop-products {
+  padding-top: 0;
 }
 
 /* Product grid — targets both the custom ss-products class AND the default WooCommerce columns-N output */
