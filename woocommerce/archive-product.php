@@ -9,63 +9,6 @@ defined('ABSPATH') || exit;
 
 get_header();
 
-// ── Scoped Shop UI fixes (Lookbook sizing + left-aligned product grid) ──
-// Implemented inside the Shop template to avoid relying on Additional CSS.
-?>
-<style id="ss-shop-lookbook-fixed-sizes">
-/* Fix all lookbook images to exactly 608.867 x 814.483px */
-.ss-shop-lookbook .ss-lookbook-media,
-.ss-lookbook-grid .ss-lookbook-media {
-  width: 608.867px !important;
-  max-width: 100% !important;
-  height: 814.483px !important;
-  aspect-ratio: unset !important;
-}
-
-/* For the 2-up and 3-up grids, cap columns so cards don't stretch beyond that width */
-.ss-lookbook-grid--2 {
-  grid-template-columns: repeat(2, min(608.867px, 1fr)) !important;
-  justify-content: center !important;
-}
-
-.ss-lookbook-grid--3 {
-  grid-template-columns: repeat(3, min(608.867px, 1fr)) !important;
-  justify-content: center !important;
-}
-
-/* Ensure the image fills the fixed media box */
-.ss-shop-lookbook .ss-lookbook-media img,
-.ss-lookbook-grid .ss-lookbook-media img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-}
-
-/* Mobile: let them shrink naturally */
-@media (max-width: 660px) {
-  .ss-shop-lookbook .ss-lookbook-media,
-  .ss-lookbook-grid .ss-lookbook-media {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 608.867 / 814.483 !important;
-  }
-}
-
-/* Align products grid to the left */
-.ss-shop-products .ss-container {
-  margin-left: 0 !important;
-  margin-right: auto !important;
-  padding-left: 24px !important;
-}
-
-.woocommerce ul.products.ss-products,
-.woocommerce ul.products {
-  justify-content: flex-start !important;
-  margin-left: 0 !important;
-}
-</style>
-<?php
-
 // ── Helper: get shop page ID ───────────────────────────────────────────────
 $shop_page_id = function_exists('wc_get_page_id') ? (int) wc_get_page_id('shop') : 0;
 if ($shop_page_id <= 0) {
