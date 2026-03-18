@@ -83,6 +83,12 @@
 
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; background:var(--ss-bg); color:var(--ss-text); font-family:var(--ss-font-body); }
+
+/* Default text color for editable content when no explicit color is chosen (front end + block editor) */
+.entry-content,
+.editor-styles-wrapper {
+  color: var(--ss-title-color);
+}
 img{ max-width:100%; height:auto; display:block; }
 a{ color:inherit; text-decoration:none; }
 button{ font-family:inherit; }
@@ -1405,6 +1411,13 @@ body.single-product main,
 }
 .ss-collection-page .ss-collection-title {
   margin: 0 0 16px;
+  color: var(--ss-title-color);
+}
+
+/* Visible collection title (from post content / blocks): use title color when rendered as first block or as block title */
+.ss-collection-page .ss-collection-hero .ss-collection-content.entry-content > *:first-child,
+.ss-collection-page .ss-collection-hero .ss-collection-content .wp-block-post-title,
+.ss-collection-page .ss-collection-hero .ss-collection-content h1 {
   color: var(--ss-title-color);
 }
 
