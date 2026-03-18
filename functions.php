@@ -1516,10 +1516,11 @@ add_filter('woocommerce_dropdown_variation_attribute_options_args', function ($a
     if (!function_exists('wc_attribute_label') || empty($args['attribute'])) {
         return $args;
     }
-    $label = wc_attribute_label($args['attribute']);
+    $product = isset($args['product']) ? $args['product'] : null;
+    $label   = wc_attribute_label($args['attribute'], $product);
     $args['show_option_none'] = $label !== ''
-        ? esc_html(sprintf(__('Select %s', 'stone-sparkle'), $label))
-        : esc_html__('Choose an option', 'woocommerce');
+        ? sprintf(__('Select %s', 'stone-sparkle'), $label)
+        : __('Choose an option', 'woocommerce');
     return $args;
 }, 10, 1);
 
