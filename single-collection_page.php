@@ -115,11 +115,33 @@ while (have_posts()) {
           echo '<p class="ss-collection-empty">' . esc_html__('Please select a collection in the editor.', 'stone-sparkle') . '</p>';
       } else {
           $paged = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
+
+          // Honor WooCommerce catalog default ordering (Customizer → WooCommerce → Product Catalog)
+          // and optional customer-facing override (?orderby=...).
+          $orderby_value = '';
+          if (isset($_GET['orderby'])) {
+              $orderby_value = (string) wp_unslash($_GET['orderby']);
+              if (function_exists('wc_clean')) {
+                  $orderby_value = (string) wc_clean($orderby_value);
+              } else {
+                  $orderby_value = sanitize_text_field($orderby_value);
+              }
+          }
+
+          $ordering_args = null;
+          if (function_exists('wc_get_catalog_ordering_args')) {
+              // If no explicit request, fall back to the WooCommerce global default.
+              $default_orderby = (string) get_option('woocommerce_default_catalog_orderby', 'menu_order');
+              $effective_orderby = $orderby_value !== '' ? $orderby_value : $default_orderby;
+              $ordering_args = wc_get_catalog_ordering_args($effective_orderby);
+          }
+
           $args = [
               'post_type'      => 'product',
               'post_status'    => 'publish',
               'posts_per_page' => $per_page,
               'paged'          => $paged,
+              // Default fallback ordering. If WooCommerce ordering args are available, they'll override below.
               'orderby'        => 'menu_order title',
               'order'          => 'ASC',
               'tax_query'      => [
@@ -130,6 +152,18 @@ while (have_posts()) {
                   ],
               ],
           ];
+
+          if (is_array($ordering_args)) {
+              if (isset($ordering_args['orderby'])) {
+                  $args['orderby'] = $ordering_args['orderby'];
+              }
+              if (isset($ordering_args['order']) && is_string($ordering_args['order']) && $ordering_args['order'] !== '') {
+                  $args['order'] = $ordering_args['order'];
+              }
+              if (isset($ordering_args['meta_key']) && is_string($ordering_args['meta_key']) && $ordering_args['meta_key'] !== '') {
+                  $args['meta_key'] = $ordering_args['meta_key'];
+              }
+          }
           $query = new WP_Query($args);
 
           if ($query->have_posts()) {
@@ -153,6 +187,7 @@ while (have_posts()) {
                       'current' => $paged,
                       'base'    => esc_url(get_permalink()) . '%_%',
                       'format'  => '?paged=%#%',
+                      'add_args' => $orderby_value !== '' ? ['orderby' => $orderby_value] : false,
                   ]);
                   echo '</nav>';
               }
