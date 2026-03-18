@@ -704,7 +704,9 @@ function ss_render_product_gallery() {
     } else {
         $images = [];
         foreach ($ids as $id) {
-            $full  = wp_get_attachment_image_url($id, 'large');
+            // Use the full/original asset for the zoom source so that
+            // desktop zoom at 2.5x on a 576px viewport remains crisp.
+            $full  = wp_get_attachment_image_url($id, 'full');
             $thumb = wp_get_attachment_image_url($id, 'woocommerce_thumbnail');
             if (!$full) {
                 continue;
