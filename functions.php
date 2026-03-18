@@ -1960,3 +1960,281 @@ $fields[] = array(
         'show_in_rest' => 0,
     ));
 });
+
+/**
+ * Size chart PDF: per-product metabox (native WP, no plugin).
+ * Stores the selected PDF attachment ID in post meta:
+ * - ss_size_chart_pdf_attachment_id
+ */
+define('SS_SIZE_CHART_PDF_META_KEY', 'ss_size_chart_pdf_attachment_id');
+
+add_action('add_meta_boxes', function () {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    // In some environments get_current_screen() can be null; still allow meta box for safety.
+    if ($screen && isset($screen->post_type) && $screen->post_type !== 'product') {
+        return;
+    }
+
+    add_meta_box(
+        'ss_size_chart_pdf_metabox',
+        __('Size chart (PDF)', 'stone-sparkle'),
+        'ss_render_size_chart_pdf_metabox',
+        'product',
+        'side',
+        'default'
+    );
+});
+
+/**
+ * Render the Size chart PDF metabox.
+ *
+ * @param WP_Post $post
+ */
+function ss_render_size_chart_pdf_metabox($post) {
+    $attachment_id = (int) get_post_meta($post->ID, SS_SIZE_CHART_PDF_META_KEY, true);
+    $attachment_url = $attachment_id > 0 ? wp_get_attachment_url($attachment_id) : '';
+
+    wp_enqueue_media();
+
+    wp_nonce_field('ss_size_chart_pdf_save', 'ss_size_chart_pdf_nonce');
+    ?>
+    <p class="description">
+        <?php esc_html_e('PDF displayed as a “Size chart” link next to the Size selector.', 'stone-sparkle'); ?>
+    </p>
+
+    <input type="hidden" id="ss_size_chart_pdf_attachment_id" name="ss_size_chart_pdf_attachment_id" value="<?php echo (int) $attachment_id; ?>">
+
+    <p>
+        <button
+            type="button"
+            class="button ss-size-chart-pdf__pick"
+            data-ss-size-chart-pdf-target="#ss_size_chart_pdf_attachment_id"
+            data-ss-size-chart-pdf-title="<?php echo esc_attr__('Select a PDF file', 'stone-sparkle'); ?>"
+        >
+            <?php echo esc_html($attachment_id > 0 ? __('Replace PDF', 'stone-sparkle') : __('Select PDF', 'stone-sparkle')); ?>
+        </button>
+
+        <?php if (!empty($attachment_url)) : ?>
+            <span style="margin-left:8px;">
+                <a href="<?php echo esc_url($attachment_url); ?>" target="_blank" rel="noopener noreferrer">
+                    <?php echo esc_html__('View current', 'stone-sparkle'); ?>
+                </a>
+            </span>
+        <?php endif; ?>
+    </p>
+
+    <script>
+      (function(){
+        var root = document.currentScript ? document.currentScript.parentElement : null;
+        if (!root) return;
+
+        var btn = root.querySelector('.ss-size-chart-pdf__pick');
+        if (!btn || typeof wp === 'undefined' || !wp.media) return;
+
+        var targetSel = btn.getAttribute('data-ss-size-chart-pdf-target') || '#ss_size_chart_pdf_attachment_id';
+        var input = document.querySelector(targetSel);
+        if (!input) return;
+
+        var frame = null;
+
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+
+          if (frame) {
+            frame.open();
+            return;
+          }
+
+          var title = btn.getAttribute('data-ss-size-chart-pdf-title') || 'Select PDF';
+          frame = wp.media({
+            title: title,
+            button: { text: 'Use this file' },
+            multiple: false
+          });
+
+          frame.on('select', function(){
+            var selection = frame.state().get('selection');
+            var attachment = selection && selection.first ? selection.first() : null;
+            var id = attachment && attachment.id ? attachment.id : 0;
+            input.value = String(id);
+            btn.textContent = 'Replace PDF';
+          });
+
+          frame.open();
+        });
+      })();
+    </script>
+    <?php
+}
+
+add_action('save_post_product', function ($post_id) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    if (wp_is_post_revision($post_id)) {
+        return;
+    }
+    if (!isset($_POST['ss_size_chart_pdf_nonce'])) {
+        return;
+    }
+
+    $nonce = sanitize_text_field(wp_unslash((string) $_POST['ss_size_chart_pdf_nonce']));
+    if (!wp_verify_nonce($nonce, 'ss_size_chart_pdf_save')) {
+        return;
+    }
+
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    $raw_id = isset($_POST['ss_size_chart_pdf_attachment_id']) ? (string) $_POST['ss_size_chart_pdf_attachment_id'] : '';
+    $attachment_id = (int) $raw_id;
+
+    if ($attachment_id <= 0) {
+        delete_post_meta($post_id, SS_SIZE_CHART_PDF_META_KEY);
+        return;
+    }
+
+    $mime = get_post_mime_type($attachment_id);
+    if ($mime !== 'application/pdf') {
+        // Refuse non-PDF uploads to keep front-end modal predictable.
+        delete_post_meta($post_id, SS_SIZE_CHART_PDF_META_KEY);
+        return;
+    }
+
+    update_post_meta($post_id, SS_SIZE_CHART_PDF_META_KEY, $attachment_id);
+});
+
+/**
+ * Check if the current product has a visible variation attribute named "size".
+ *
+ * Supports:
+ * - Global attributes stored as `pa_size`
+ * - Custom product attributes stored as `size`
+ *
+ * @param WC_Product|null $product
+ * @return bool
+ */
+function ss_product_has_visible_size_attribute($product) {
+    if (!$product || !is_a($product, 'WC_Product_Variable')) {
+        return false;
+    }
+
+    if (!method_exists($product, 'get_attributes')) {
+        return false;
+    }
+
+    $attributes = $product->get_attributes();
+    if (!is_array($attributes) || empty($attributes)) {
+        return false;
+    }
+
+    foreach ($attributes as $attr_key => $attr_obj) {
+        if (!is_string($attr_key)) {
+            continue;
+        }
+
+        $normalized_key = null;
+        if ($attr_key === 'size') {
+            $normalized_key = 'size';
+        } elseif (strpos($attr_key, 'pa_') === 0 && substr($attr_key, 3) === 'size') {
+            $normalized_key = 'size';
+        }
+
+        if ($normalized_key !== 'size') {
+            continue;
+        }
+        // Do not rely on Woo's "visible" flag here: even if the attribute isn't rendered as a select,
+        // the frontend JS only inserts the link when the corresponding select exists in the DOM.
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Frontend: if the product has a visible `size` variation attribute and a configured PDF,
+ * render:
+ * - an `ss-popup` modal with an iframe
+ * - a hidden link template containing the resolved PDF URL (used by JS to insert next to the Size label)
+ */
+add_action('woocommerce_single_product_summary', function () {
+    if (!function_exists('is_product') || !is_product()) {
+        return;
+    }
+    if (!function_exists('wc_get_product')) {
+        return;
+    }
+    if (!function_exists('get_post_meta')) {
+        return;
+    }
+
+    global $product;
+    if (!$product || !is_a($product, 'WC_Product')) {
+        $product = wc_get_product(get_the_ID());
+    }
+
+    if (!$product || !is_a($product, 'WC_Product')) {
+        return;
+    }
+
+    $pid = (int) $product->get_id();
+    if ($pid <= 0) {
+        return;
+    }
+
+    $attachment_id = (int) get_post_meta($pid, SS_SIZE_CHART_PDF_META_KEY, true);
+    if ($attachment_id <= 0) {
+        return;
+    }
+
+    $pdf_url = wp_get_attachment_url($attachment_id);
+    if (empty($pdf_url)) {
+        return;
+    }
+
+    $pdf_url_attr = esc_url($pdf_url);
+    $link_text = esc_html__('Size chart', 'stone-sparkle');
+
+    ?>
+    <div style="display:none;">
+        <a
+            class="ss-size-chart-link-template"
+            href="<?php echo $pdf_url_attr; ?>"
+            data-ss-size-chart-pdf-url="<?php echo $pdf_url_attr; ?>"
+        >
+            <?php echo $link_text; ?>
+        </a>
+    </div>
+
+    <div class="ss-popup ss-size-chart-popup" id="ssSizeChartPopup" aria-hidden="true">
+        <div class="ss-popup__backdrop" data-ss-popup-close tabindex="-1"></div>
+        <div class="ss-popup__dialog" role="dialog" aria-modal="true" aria-labelledby="ssSizeChartPopupTitle">
+            <button
+                class="ss-popup__close"
+                type="button"
+                aria-label="<?php echo esc_attr__('Close', 'stone-sparkle'); ?>"
+                data-ss-popup-close
+            >
+                <span aria-hidden="true">&times;</span>
+            </button>
+
+            <div class="ss-popup__content">
+                <h2 class="ss-popup__title" id="ssSizeChartPopupTitle"><?php echo esc_html__('Size chart', 'stone-sparkle'); ?></h2>
+                <div class="ss-popup__body">
+                    <?php echo esc_html__('Open the PDF size chart below.', 'stone-sparkle'); ?>
+                </div>
+
+                <div class="ss-size-chart-popup__frame" aria-label="<?php echo esc_attr__('Size chart PDF', 'stone-sparkle'); ?>">
+                    <iframe
+                        class="ss-size-chart-popup__iframe"
+                        title="<?php echo esc_attr__('Size chart PDF', 'stone-sparkle'); ?>"
+                        src=""
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}, 55);
