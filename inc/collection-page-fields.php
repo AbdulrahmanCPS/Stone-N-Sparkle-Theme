@@ -14,6 +14,8 @@ if (!defined('ABSPATH')) {
 define('SS_COLLECTION_LOOKBOOK_BEFORE_KEY', 'ss_collection_lookbook_before');
 define('SS_COLLECTION_LOOKBOOK_AFTER_KEY', 'ss_collection_lookbook_after');
 define('SS_COLLECTION_LOOKBOOK_NONCE_ACTION', 'ss_collection_lookbook_save');
+define('SS_COLLECTION_SORTING_META_KEY', 'ss_collection_sorting');
+define('SS_COLLECTION_SORTING_NONCE_ACTION', 'ss_collection_sorting_save');
 
 // -----------------------------------------------------------------------------
 // ACF field group (collection_term + products_per_page)
@@ -139,6 +141,86 @@ add_action('save_post_collection_page', function ($post_id) {
         update_post_meta($post_id, 'collection_products_per_page', $pp >= 1 ? $pp : 12);
     }
 }, 10, 1);
+
+// -----------------------------------------------------------------------------
+// Collection sorting meta box (per collection_page)
+// -----------------------------------------------------------------------------
+add_action('add_meta_boxes', function () {
+    $screen = get_current_screen();
+    if (!$screen || $screen->post_type !== 'collection_page') {
+        return;
+    }
+
+    add_meta_box(
+        'ss_collection_sorting',
+        __('Collection sorting', 'stone-sparkle'),
+        'ss_render_collection_sorting_meta_box',
+        'collection_page',
+        'side',
+        'default'
+    );
+});
+
+/**
+ * Render per-collection sorting selector (saved to post meta).
+ */
+function ss_render_collection_sorting_meta_box($post) {
+    wp_nonce_field(SS_COLLECTION_SORTING_NONCE_ACTION, 'ss_collection_sorting_nonce');
+
+    $current = (string) get_post_meta($post->ID, SS_COLLECTION_SORTING_META_KEY, true);
+    if ($current === '') {
+        $current = 'inherit';
+    }
+
+    $options = [
+        'inherit'    => __('Inherit global default (WooCommerce)', 'stone-sparkle'),
+        'menu_order' => __('Default (custom ordering + name)', 'stone-sparkle'),
+        'date'       => __('Sort by most recent', 'stone-sparkle'),
+        'price'      => __('Sort by price (low to high)', 'stone-sparkle'),
+        'price-desc' => __('Sort by price (high to low)', 'stone-sparkle'),
+        'popularity' => __('Popularity (sales)', 'stone-sparkle'),
+        'type'       => __('Sort by type (category priority)', 'stone-sparkle'),
+    ];
+    ?>
+    <p class="description" style="margin-bottom:10px;">
+        <?php esc_html_e('Controls how products are ordered on this collection page.', 'stone-sparkle'); ?>
+    </p>
+    <p>
+        <label for="ss_collection_sorting_select" class="screen-reader-text"><?php esc_html_e('Collection sorting', 'stone-sparkle'); ?></label>
+        <select name="ss_collection_sorting" id="ss_collection_sorting_select" class="widefat">
+            <?php foreach ($options as $value => $label) : ?>
+                <option value="<?php echo esc_attr($value); ?>" <?php selected($current, $value); ?>>
+                    <?php echo esc_html($label); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </p>
+    <?php
+}
+
+add_action('save_post_collection_page', function ($post_id) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    if (!isset($_POST['ss_collection_sorting_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['ss_collection_sorting_nonce'])), SS_COLLECTION_SORTING_NONCE_ACTION)) {
+        return;
+    }
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    if (!isset($_POST['ss_collection_sorting'])) {
+        return;
+    }
+
+    $val = sanitize_text_field(wp_unslash($_POST['ss_collection_sorting']));
+    $allowed = ['inherit', 'menu_order', 'date', 'price', 'price-desc', 'popularity', 'type'];
+    if (!in_array($val, $allowed, true)) {
+        $val = 'inherit';
+    }
+
+    update_post_meta($post_id, SS_COLLECTION_SORTING_META_KEY, $val);
+}, 15, 1);
 
 // -----------------------------------------------------------------------------
 // Lookbook before / after meta boxes

@@ -116,10 +116,15 @@ while (have_posts()) {
       } else {
           $paged = isset($_GET['paged']) ? max(1, (int) $_GET['paged']) : 1;
 
-          // Honor WooCommerce catalog default ordering (Customizer → WooCommerce → Product Catalog)
-          // and optional customer-facing override (?orderby=...).
+          // Per-collection sorting (meta box) with optional customer override (?orderby=...) only when inheriting.
+          $collection_sorting = (string) get_post_meta($post_id, defined('SS_COLLECTION_SORTING_META_KEY') ? SS_COLLECTION_SORTING_META_KEY : 'ss_collection_sorting', true);
+          $allowed_sorts = ['inherit', 'menu_order', 'date', 'price', 'price-desc', 'popularity', 'type'];
+          if ($collection_sorting === '' || !in_array($collection_sorting, $allowed_sorts, true)) {
+              $collection_sorting = 'inherit';
+          }
+
           $orderby_value = '';
-          if (isset($_GET['orderby'])) {
+          if ($collection_sorting === 'inherit' && isset($_GET['orderby'])) {
               $orderby_value = (string) wp_unslash($_GET['orderby']);
               if (function_exists('wc_clean')) {
                   $orderby_value = (string) wc_clean($orderby_value);
@@ -129,10 +134,14 @@ while (have_posts()) {
           }
 
           $ordering_args = null;
-          if (function_exists('wc_get_catalog_ordering_args')) {
-              // If no explicit request, fall back to the WooCommerce global default.
-              $default_orderby = (string) get_option('woocommerce_default_catalog_orderby', 'menu_order');
-              $effective_orderby = $orderby_value !== '' ? $orderby_value : $default_orderby;
+          if ($collection_sorting !== 'type' && function_exists('wc_get_catalog_ordering_args')) {
+              // Determine the effective WooCommerce catalog orderby value.
+              if ($collection_sorting === 'inherit') {
+                  $default_orderby = (string) get_option('woocommerce_default_catalog_orderby', 'menu_order');
+                  $effective_orderby = $orderby_value !== '' ? $orderby_value : $default_orderby;
+              } else {
+                  $effective_orderby = $collection_sorting;
+              }
               $ordering_args = wc_get_catalog_ordering_args($effective_orderby);
           }
 
@@ -153,7 +162,15 @@ while (have_posts()) {
               ],
           ];
 
-          if (is_array($ordering_args)) {
+          if (in_array($collection_sorting, ['type', 'price', 'price-desc', 'popularity'], true)) {
+              // Custom ordering implemented via a scoped SQL hook (see functions.php).
+              // - type: product category priority list
+              // - price / price-desc: wc_product_meta_lookup min_price ordering
+              // - popularity: wc_product_meta_lookup total_sales ordering
+              $args['ss_collection_ordering'] = $collection_sorting;
+              $args['orderby'] = 'title';
+              $args['order'] = 'ASC';
+          } elseif (is_array($ordering_args)) {
               if (isset($ordering_args['orderby'])) {
                   $args['orderby'] = $ordering_args['orderby'];
               }
