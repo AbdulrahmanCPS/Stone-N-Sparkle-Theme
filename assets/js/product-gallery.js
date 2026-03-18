@@ -285,7 +285,7 @@
             thumb: variation.image.thumb_src || variation.image.full_src,
             alt: variation.image.title || ''
           };
-          images = [variationItem];
+          images = [variationItem].concat(initialImages.slice(1));
           state.index = 0;
           buildTrack();
           buildThumbs();
