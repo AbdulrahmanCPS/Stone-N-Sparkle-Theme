@@ -64,6 +64,7 @@
   --ss-cream: #FFEEDB;
   --ss-wine:  #3D1317;
   --ss-rose:  #65343C;
+  --ss-title-color: #65343C;
   --ss-sand:  #D4BBAC;
   --ss-gold:  #C29A78;
 
@@ -1128,7 +1129,7 @@ body.single-product main,
   letter-spacing: 1.4px;
   text-transform: uppercase;
   margin: 0 0 12px;
-  color: var(--ss-wine);
+  color: var(--ss-title-color);
 }
 
 .ss-category-description {
@@ -1404,6 +1405,7 @@ body.single-product main,
 }
 .ss-collection-page .ss-collection-title {
   margin: 0 0 16px;
+  color: var(--ss-title-color);
 }
 
 /* Hide main page title visually on collection, shop, category (keep in DOM for SEO / screen readers) */
@@ -1990,7 +1992,7 @@ body.single-product main,
   text-transform: uppercase;
   line-height: 1.4;
   margin: 0 0 8px;
-  color: var(--ss-wine);
+  color: var(--ss-title-color);
   font-weight: 400;
 }
 .ss-product-price {
@@ -2150,6 +2152,7 @@ body.single-product .woocommerce div.product,
   flex: 0 1 auto;
   width: 100%;
   text-align: center;
+  color: var(--ss-title-color);
 }
 .single-product .ss-pdp-wishlist-inline{
   display: inline-flex;

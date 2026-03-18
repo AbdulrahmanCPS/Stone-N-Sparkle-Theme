@@ -26,11 +26,12 @@ Homepage layout (matches your reference)
   Then replace the placeholder cover blocks with your real images, and update links.
 
 Brand values used
-- Cream:  #FFEEDB
-- Maroon: #65343C
-- Beige:  #D4BBAC
-- Tan:    #C29A78
-- Dark:   #3D1317
+- Cream:       #FFEEDB
+- Maroon:      #65343C
+- Page titles: #65343C (default)
+- Beige:       #D4BBAC
+- Tan:         #C29A78
+- Dark:        #3D1317
 
 Fonts bundled
 - mollina.otf
