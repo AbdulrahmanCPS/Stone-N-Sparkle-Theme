@@ -18,9 +18,9 @@
 
     if (open) {
       lastFocus = document.activeElement;
-      // Focus the close button for accessibility.
+      // Focus the close button for accessibility (preventScroll avoids page jump on mobile).
       const closeBtn = drawer.querySelector('.ss-drawer__close');
-      if (closeBtn) closeBtn.focus();
+      if (closeBtn) closeBtn.focus({ preventScroll: true });
     } else if (lastFocus && typeof lastFocus.focus === 'function') {
       lastFocus.focus();
       lastFocus = null;

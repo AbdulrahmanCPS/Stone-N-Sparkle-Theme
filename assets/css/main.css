@@ -140,27 +140,39 @@ html.ss-no-scroll body{ overflow:hidden; }
 .ss-drawer{
   position: fixed;
   inset: 0;
-  z-index: 1000;
-  display: none;
+  z-index: 9999;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: visibility 0.2s ease, opacity 0.2s ease;
 }
-.ss-drawer.is-open{ display:block; }
+.ss-drawer.is-open{
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
 
 .ss-drawer__overlay{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,0.35);
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(0,0,0,0.45);
 }
 
 .ss-drawer__panel{
-  position:absolute;
-  top:0;
-  left:0;
-  height:100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
   width: min(360px, 86vw);
-  background: rgba(255,238,219,0.98);
+  z-index: 2;
+  background: #FFEEDB;
   border-right: 1px solid var(--ss-border);
   padding: 22px 18px;
-  backdrop-filter: blur(10px);
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+}
+.ss-drawer.is-open .ss-drawer__panel{
   transform: translateX(-6px);
 }
 
@@ -509,6 +521,11 @@ ul.products.columns-4.ss-products::before {
 
 /* Main */
 .ss-main{ padding: 38px 0 0; }
+body.single-product #primary,
+body.single-product main,
+.single-product .ss-main{
+  padding-top: 2.5rem;
+}
 
 /* Lookbook stack (matches reference) */
 .ss-lookbook{
@@ -627,14 +644,13 @@ ul.products.columns-4.ss-products::before {
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  height: 36px;
-  /* Fixed width to ensure all buttons are identical */
-  width: 132px;
-  padding: 0 24px;
+  height: 44px;
+  min-width: 160px;
+  padding: 12px 28px;
   border-radius: 4px;
   background: var(--ss-rose);
   color: var(--ss-beige);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1.6px;
   text-transform: uppercase;
   border: 1px solid rgba(255,238,219,0.25);
@@ -1056,6 +1072,12 @@ ul.products.columns-4.ss-products::before {
 
 /* Header logo responsive sizing */
 @media (max-width: 600px){
+  .ss-lookbook .ss-btn{
+    height: 40px;
+    min-width: 140px;
+    padding: 10px 24px;
+    font-size: 11px;
+  }
 }
 
 /* ===============
@@ -2008,10 +2030,11 @@ ul.products.columns-4.ss-products::before {
 /* Constrain and center the default Woo single-product layout.
    Without this, Woo's floats can stretch oddly (especially when images are missing/hidden)
    and action buttons end up spanning too wide. */
+body.single-product .woocommerce div.product,
 .single-product .woocommerce div.product{
   width:min(var(--ss-max), calc(100% - 48px));
   margin: 0 auto;
-  padding: 28px 0 56px;
+  padding: 6rem 0 5.5rem !important;
 }
 
 .single-product .woocommerce div.product::after{ content:""; display:block; clear:both; }
@@ -2083,13 +2106,18 @@ ul.products.columns-4.ss-products::before {
 
 /* Mobile single product: horizontal breathing space + variation alignment */
 @media (max-width: 768px){
+  body.single-product .woocommerce div.product,
   .single-product .woocommerce div.product{
     width: 100%;
     max-width: 100%;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 4rem 20px 2rem !important;
+    margin-bottom: 0;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow-x: visible;
+  }
+  /* Space between REQUEST PRIVATE VIEW button and footer */
+  .single-product .ss-pdp-secondary{
+    margin-bottom: 4rem !important;
   }
   .single-product div.product div.images{
     width: 100%;

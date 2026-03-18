@@ -19,35 +19,6 @@ if (!defined('ABSPATH')) { exit; }
       <span class="ss-burger__line" aria-hidden="true"></span>
     </button>
 
-    <div id="ssPrimaryNav" class="ss-drawer" aria-hidden="true">
-      <div class="ss-drawer__overlay" data-ss-drawer-close></div>
-
-      <div class="ss-drawer__panel" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e('Menu', 'stone-sparkle'); ?>">
-        <button class="ss-drawer__close" type="button" aria-label="<?php esc_attr_e('Close menu', 'stone-sparkle'); ?>" data-ss-drawer-close>
-          <span aria-hidden="true">&times;</span>
-        </button>
-
-        <nav class="ss-drawer__nav" aria-label="<?php esc_attr_e('Primary', 'stone-sparkle'); ?>">
-          <?php
-          if ( has_nav_menu('primary') ) {
-            wp_nav_menu([
-              'theme_location' => 'primary',
-              'container'      => false,
-              'menu_class'     => 'ss-drawer__menu',
-              'fallback_cb'    => false,
-              'depth'          => 2,
-            ]);
-          } else {
-            echo '<ul class="ss-drawer__menu">';
-            echo '<li><a href="' . esc_url(home_url('/shop/')) . '">' . esc_html__('Shop', 'stone-sparkle') . '</a></li>';
-            echo '<li><a href="' . esc_url(home_url('/contact/')) . '">' . esc_html__('Contact', 'stone-sparkle') . '</a></li>';
-            echo '</ul>';
-          }
-          ?>
-        </nav>
-      </div>
-    </div>
-
     <a class="ss-brand" href="<?php echo esc_url(home_url('/')); ?>" aria-label="<?php echo esc_attr(get_bloginfo('name')); ?>">
       <?php
         // Prefer the Customizer "Site Logo" if set; fallback to the bundled logo.
@@ -91,3 +62,32 @@ if (!defined('ABSPATH')) { exit; }
 
   </div>
 </header>
+
+<div id="ssPrimaryNav" class="ss-drawer" aria-hidden="true">
+  <div class="ss-drawer__overlay" data-ss-drawer-close></div>
+
+  <div class="ss-drawer__panel" role="dialog" aria-modal="true" aria-label="<?php esc_attr_e('Menu', 'stone-sparkle'); ?>">
+    <button class="ss-drawer__close" type="button" aria-label="<?php esc_attr_e('Close menu', 'stone-sparkle'); ?>" data-ss-drawer-close>
+      <span aria-hidden="true">&times;</span>
+    </button>
+
+    <nav class="ss-drawer__nav" aria-label="<?php esc_attr_e('Primary', 'stone-sparkle'); ?>">
+      <?php
+      if ( has_nav_menu('primary') ) {
+        wp_nav_menu([
+          'theme_location' => 'primary',
+          'container'      => false,
+          'menu_class'     => 'ss-drawer__menu',
+          'fallback_cb'    => false,
+          'depth'          => 2,
+        ]);
+      } else {
+        echo '<ul class="ss-drawer__menu">';
+        echo '<li><a href="' . esc_url(home_url('/shop/')) . '">' . esc_html__('Shop', 'stone-sparkle') . '</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/contact/')) . '">' . esc_html__('Contact', 'stone-sparkle') . '</a></li>';
+        echo '</ul>';
+      }
+      ?>
+    </nav>
+  </div>
+</div>
