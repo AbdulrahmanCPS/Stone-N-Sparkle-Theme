@@ -1281,6 +1281,105 @@ add_filter('woocommerce_product_loop_start', function ($html) {
 });
 
 /**
+ * Collection pages: custom ordering helpers.
+ *
+ * Implemented as scoped SQL adjustments for the collection page product query only.
+ * Supported modes via `ss_collection_ordering` query var:
+ * - type: product category priority list (filterable via `ss_collection_type_sort_priority`)
+ * - price / price-desc: order by lookup table min_price (WooCommerce)
+ * - popularity: order by lookup table total_sales (WooCommerce)
+ */
+add_filter('posts_clauses', function ($clauses, $query) {
+    if (!($query instanceof WP_Query)) {
+        return $clauses;
+    }
+    if (is_admin() || !$query->is_main_query() && !$query->get('ss_collection_ordering')) {
+        // Not our query (we only set ss_collection_ordering on the collection page product query).
+        return $clauses;
+    }
+    $mode = (string) $query->get('ss_collection_ordering');
+    if ($mode === '') {
+        return $clauses;
+    }
+
+    global $wpdb;
+
+    // ---------------------------------------------------------------------
+    // price / price-desc / popularity: use WooCommerce lookup table ordering
+    // ---------------------------------------------------------------------
+    if (in_array($mode, ['price', 'price-desc', 'popularity'], true)) {
+        static $lookup_table_exists = null;
+        if ($lookup_table_exists === null) {
+            $table = $wpdb->prefix . 'wc_product_meta_lookup';
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $lookup_table_exists = (bool) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        }
+
+        if ($lookup_table_exists) {
+            $lookup_table = $wpdb->prefix . 'wc_product_meta_lookup';
+            $clauses['join'] .= " \nLEFT JOIN {$lookup_table} AS ss_wcl ON (ss_wcl.product_id = {$wpdb->posts}.ID)";
+
+            $order_by = '';
+            if ($mode === 'popularity') {
+                $order_by = "COALESCE(ss_wcl.total_sales, 0) DESC, {$wpdb->posts}.post_title ASC";
+            } elseif ($mode === 'price-desc') {
+                $order_by = "COALESCE(ss_wcl.min_price, 0) DESC, {$wpdb->posts}.post_title ASC";
+            } else {
+                $order_by = "COALESCE(ss_wcl.min_price, 0) ASC, {$wpdb->posts}.post_title ASC";
+            }
+
+            $clauses['orderby'] = $order_by;
+            return $clauses;
+        }
+
+        // Fallback: if lookup table missing, keep default clauses (WP_Query meta ordering may apply elsewhere).
+        return $clauses;
+    }
+
+    // ---------------------------------------------------------------------
+    // type: product category priority list
+    // ---------------------------------------------------------------------
+    if ($mode !== 'type') {
+        return $clauses;
+    }
+
+    $default_priority = ['rings', 'necklaces', 'bangles', 'bracelets', 'earrings'];
+    $priority_slugs = apply_filters('ss_collection_type_sort_priority', $default_priority);
+    if (!is_array($priority_slugs)) {
+        $priority_slugs = $default_priority;
+    }
+    $priority_slugs = array_values(array_filter(array_map('sanitize_title', $priority_slugs)));
+    if (empty($priority_slugs)) {
+        $priority_slugs = $default_priority;
+    }
+
+    $when = [];
+    $i = 1;
+    foreach ($priority_slugs as $slug) {
+        $when[] = "WHEN t.slug = '" . esc_sql($slug) . "' THEN " . (int) $i;
+        $i++;
+    }
+    $case = 'CASE ' . implode(' ', $when) . ' ELSE 999 END';
+
+    $clauses['join'] .= " \nLEFT JOIN {$wpdb->term_relationships} AS ss_tr ON ({$wpdb->posts}.ID = ss_tr.object_id)";
+    $clauses['join'] .= " \nLEFT JOIN {$wpdb->term_taxonomy} AS ss_tt ON (ss_tr.term_taxonomy_id = ss_tt.term_taxonomy_id AND ss_tt.taxonomy = 'product_cat')";
+    $clauses['join'] .= " \nLEFT JOIN {$wpdb->terms} AS t ON (ss_tt.term_id = t.term_id)";
+
+    $clauses['fields'] .= ", MIN({$case}) AS ss_type_priority";
+
+    $groupby = isset($clauses['groupby']) ? trim((string) $clauses['groupby']) : '';
+    if ($groupby === '') {
+        $clauses['groupby'] = "{$wpdb->posts}.ID";
+    } elseif (stripos($groupby, "{$wpdb->posts}.ID") === false && stripos($groupby, "{$wpdb->posts}.id") === false) {
+        $clauses['groupby'] .= ", {$wpdb->posts}.ID";
+    }
+
+    $clauses['orderby'] = "ss_type_priority ASC, {$wpdb->posts}.post_title ASC";
+
+    return $clauses;
+}, 20, 2);
+
+/**
  * Category Lookbook Image Fields
  * Enables adding lookbook images to product categories
  */
