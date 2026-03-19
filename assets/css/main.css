@@ -550,7 +550,7 @@ body.single-product main,
   align-items:center;
   column-gap:24px;
   margin:0 auto;
-  width:min(760px,100%);
+  width:min(860px,100%);
 }
 
 /* Add a tiny controlled gap between image and button */
@@ -558,11 +558,11 @@ body.single-product main,
   margin-left: 14px;
 }
 .ss-lookbook-card{
-  width: min(522px, 100%);
+  width: min(640px, 100%);
 }
 .ss-lookbook-media{
   width: 100%;
-  max-width: 522px;
+  max-width: 640px;
   aspect-ratio: 522 / 697;
   background: rgba(212,187,172,0.55);
   border: 1px solid rgba(61,19,23,0.10);
@@ -1296,11 +1296,12 @@ body.single-product main,
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-/* 1 image: centered single column */
+/* 1 image: full-width single column (landscape banner), centered */
 .ss-lookbook-grid--1 {
   grid-template-columns: 1fr;
-  max-width: 640px;
+  max-width: 100%;
   margin-inline: auto;
+  justify-content: center;
 }
 
 /* Each item fills its column */
@@ -1346,13 +1347,33 @@ body.single-product main,
 }
 
 /* ── Additional CSS (from Customizer): fixed lookbook sizes + product grid alignment ── */
-/* Fix all lookbook images to exactly 608.867 x 814.483px (desktop) */
-.ss-shop-lookbook .ss-lookbook-media,
-.ss-lookbook-grid .ss-lookbook-media {
+/* Fix lookbook images to exactly 608.867 x 814.483px (desktop), except single-image grid (landscape) */
+.ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-media,
+.ss-lookbook-grid--2 .ss-lookbook-media,
+.ss-lookbook-grid--3 .ss-lookbook-media {
   width: 608.867px !important;
   max-width: 100% !important;
   height: 814.483px !important;
   aspect-ratio: unset !important;
+}
+
+/* Single-image lookbook (grid--1): full width for landscape banner (overrides base .ss-shop-lookbook rules) */
+.ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-item,
+.ss-lookbook-grid--1 .ss-lookbook-item {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-card,
+.ss-lookbook-grid--1 .ss-lookbook-card {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-media,
+.ss-lookbook-grid--1 .ss-lookbook-media {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
 }
 
 /* Grid container: keep centered layout */
@@ -1379,29 +1400,40 @@ body.single-product main,
   object-fit: cover !important;
 }
 
+/* Single-image lookbook: let landscape image span full width and natural height */
+.ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-media img,
+.ss-lookbook-grid--1 .ss-lookbook-media img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+}
+
 /* Mobile: let them shrink naturally */
 @media (max-width: 660px) {
-  .ss-shop-lookbook .ss-lookbook-media,
-  .ss-lookbook-grid .ss-lookbook-media {
+  .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-media,
+  .ss-lookbook-grid--2 .ss-lookbook-media,
+  .ss-lookbook-grid--3 .ss-lookbook-media {
     width: 100% !important;
     height: auto !important;
     aspect-ratio: 608.867 / 814.483 !important;
   }
 }
 
-/* Align products grid to the left (ul.products is GRID in main CSS) */
+/* Center products section and grid */
 .ss-shop-products .ss-container {
-  margin-left: 0 !important;
+  margin-left: auto !important;
   margin-right: auto !important;
   padding-left: 24px !important;
+  padding-right: 24px !important;
 }
 
-/* Grid alignment: left */
+/* Grid alignment: centered */
 .woocommerce ul.products.ss-products,
 .woocommerce ul.products {
-  justify-content: flex-start !important;
-  justify-content: start !important;
-  margin-left: 0 !important;
+  justify-content: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* Collection page: hero and utilities */
@@ -1507,9 +1539,9 @@ body.single-product main,
 }
 .ss-shop .ss-shop-lookbook .ss-lookbook-grid--1 {
   grid-template-columns: 1fr;
-  max-width: 480px;
-  margin-left: 0;
-  margin-right: auto;
+  max-width: 100%;
+  margin-inline: auto;
+  justify-content: center;
 }
 
 /* Category page: mimic collection look — centered containers so content aligns */
@@ -1534,7 +1566,7 @@ body.single-product main,
   display: grid;
   grid-template-columns: repeat(3, 280px);
   gap: 40px;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
 }
 .ss-category-archive .ss-category-products ul.products li.ss-product-card,
@@ -1644,26 +1676,50 @@ body.single-product main,
 }
 
 /* Cap lookbook image size on collection page so they don’t dominate */
-.ss-collection-page .ss-shop-lookbook .ss-lookbook-item,
-.ss-collection-page .ss-shop-lookbook .ss-lookbook-item--shop {
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-item,
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-item--shop {
   display: block;
   margin: 0;
   width: min(480px, 100%);
 }
-.ss-collection-page .ss-shop-lookbook .ss-lookbook-card {
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-card {
   width: min(480px, 100%);
 }
-.ss-collection-page .ss-shop-lookbook .ss-lookbook-media {
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-media {
   width: 100%;
   max-width: 480px;
   height: auto;
   aspect-ratio: 608.867 / 814.483;
 }
-.ss-collection-page .ss-shop-lookbook .ss-lookbook-media img {
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
+/* Single-image lookbook on collection page: full width for landscape banner */
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-item,
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-item--shop {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-card {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-media {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+}
+.ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 .ss-lookbook-media img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+}
+
 /* More vertical padding between lookbook images on collection page */
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-grid {
   gap: 48px;
@@ -1678,12 +1734,12 @@ body.single-product main,
 }
 .ss-collection-page .ss-shop-lookbook .ss-lookbook-grid--1 {
   grid-template-columns: 1fr;
-  max-width: 480px;
-  margin-left: 0;
-  margin-right: auto;
+  max-width: 100%;
+  margin-inline: auto;
+  justify-content: center;
 }
 @media (max-width: 660px) {
-  .ss-collection-page .ss-shop-lookbook .ss-lookbook-media {
+  .ss-collection-page .ss-shop-lookbook .ss-lookbook-grid:not(.ss-lookbook-grid--1) .ss-lookbook-media {
     width: 100%;
     height: auto;
     aspect-ratio: 608.867 / 814.483;
@@ -1699,7 +1755,7 @@ body.single-product main,
   display: grid;
   grid-template-columns: repeat(3, 280px);
   gap: 40px;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
 }
 .ss-collection-page .ss-shop-products ul.products li.ss-product-card,
@@ -2981,11 +3037,12 @@ body.single-product .woocommerce .variations select:disabled,
   padding: 0 20px;
 }
 
-/* Align the product grid to the left */
+/* Center the product grid */
 .woocommerce ul.products.ss-products {
-  justify-content: flex-start !important;
+  justify-content: center !important;
   grid-template-columns: repeat(4, 213px) !important;
-  margin: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 /* Fix each product card to fill its grid cell */
