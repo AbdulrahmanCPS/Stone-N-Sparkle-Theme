@@ -2149,21 +2149,21 @@ body.single-product .woocommerce div.product,
   }
 }
 
-/* Title row: product title + inline wishlist (editorial hierarchy) */
+/* Title row: product title + wishlist on same line (title left, wishlist next to it) */
 .single-product .ss-pdp-title-row{
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 10px 16px;
   margin-bottom: 0;
-  text-align: center;
+  text-align: left;
 }
 .single-product .ss-pdp-title-row .product_title{
   margin: 0;
   flex: 0 1 auto;
-  width: 100%;
-  text-align: center;
+  max-width: 100%;
+  text-align: left;
   color: var(--ss-title-color);
 }
 .single-product .ss-pdp-wishlist-inline{
@@ -2191,6 +2191,14 @@ body.single-product .woocommerce div.product,
 .single-product .ss-pdp-wishlist-inline__icon::before{
   content: "\2661";
   font-style: normal;
+}
+
+/* Keep plugin wishlist wrapper inline (TI, YITH) so it stays next to title */
+.single-product .ss-pdp-title-row .tinv-wraper,
+.single-product .ss-pdp-title-row .tinv-wishlist,
+.single-product .ss-pdp-title-row .yith-wcwl-add-to-wishlist{
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 /* Fallback: style wishlist links from plugins when they appear in title row (YITH, TI, etc.) */
@@ -3017,6 +3025,124 @@ body.single-product .woocommerce .variations select:disabled,
 @media (max-width: 600px) {
   .woocommerce ul.products.ss-products {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* --------------- Wishlist page (TI WooCommerce Wishlist) --------------- */
+/* Remove duplicate "Wishlist" heading so only the page title shows */
+.tinv-wishlist .tinv-header {
+  display: none;
+}
+
+/* Table: theme colors and tighter layout */
+.tinv-wishlist.tinv-wishlist-clear {
+  max-width: var(--ss-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem;
+}
+.tinv-wishlist .tinvwl-table-manage-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--ss-font-body);
+  color: var(--ss-text);
+}
+.tinv-wishlist .tinvwl-table-manage-list thead th {
+  text-align: left;
+  padding: 12px 10px 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ss-title-color);
+  border-bottom: 2px solid var(--ss-border);
+}
+.tinv-wishlist .tinvwl-table-manage-list tbody td {
+  padding: 14px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--ss-border);
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-name {
+  text-align: left;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-price {
+  text-align: left;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-stock {
+  text-align: left;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-thumbnail img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-remove button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ss-border);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  min-height: 0;
+  cursor: pointer;
+  color: var(--ss-text);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-remove button i.ftinvwl-times {
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-remove button i.ftinvwl-times::before {
+  position: static;
+  top: 0;
+  left: 0;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-remove button:hover {
+  background: var(--ss-rose);
+  color: var(--ss-cream);
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-name a {
+  color: var(--ss-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-name a:hover {
+  color: var(--ss-rose);
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-action .button.alt {
+  background: var(--ss-wine) !important;
+  color: var(--ss-cream) !important;
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--ss-radius);
+  font-family: var(--ss-font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.tinv-wishlist .tinvwl-table-manage-list .product-action .button.alt:hover {
+  background: var(--ss-rose) !important;
+  color: var(--ss-cream) !important;
+}
+.tinv-wishlist .tinvwl-table-manage-list .stock .tinvwl-txt {
+  color: var(--ss-text);
+}
+@media (max-width: 768px) {
+  .tinv-wishlist .tinvwl-table-manage-list thead th,
+  .tinv-wishlist .tinvwl-table-manage-list tbody td {
+    padding: 10px 8px;
+  }
+  .tinv-wishlist .tinvwl-table-manage-list .product-thumbnail img {
+    width: 48px;
+    height: 48px;
   }
 }
 

@@ -132,6 +132,13 @@ add_filter('woocommerce_account_menu_items', function ($items) {
 
 add_filter('woocommerce_login_redirect', function ($redirect, $user) {
     $orders_url = wc_get_account_endpoint_url('orders', '', wc_get_page_permalink('myaccount'));
+    // Respect redirect from login form (e.g. wishlist return URL) when valid and same site.
+    if (!empty($redirect)) {
+        $allowed = wp_validate_redirect($redirect, $orders_url ?: home_url('/'));
+        if ($allowed) {
+            return $allowed;
+        }
+    }
     return $orders_url ? $orders_url : $redirect;
 }, 10, 2);
 
@@ -144,11 +151,31 @@ add_action('template_redirect', function () {
         return;
     }
     if (empty($wc->query->get_current_endpoint())) {
+        // Logged-in users: send to orders. Guests with return URL (e.g. wishlist): keep on login form.
+        if (!is_user_logged_in() && !empty($_GET['redirect']) && is_string($_GET['redirect'])) {
+            $allowed = wp_validate_redirect(wp_unslash($_GET['redirect']), false);
+            if ($allowed) {
+                return;
+            }
+        }
         $orders_url = wc_get_account_endpoint_url('orders', '', wc_get_page_permalink('myaccount'));
         if ($orders_url) {
             wp_safe_redirect($orders_url);
             exit;
         }
+    }
+});
+
+/**
+ * Pass redirect query param into login form so guests sent from wishlist (or other links) return after login.
+ */
+add_action('woocommerce_login_form_end', function () {
+    if (empty($_GET['redirect']) || !is_string($_GET['redirect'])) {
+        return;
+    }
+    $redirect_url = wp_validate_redirect(wp_unslash($_GET['redirect']), home_url('/'));
+    if ($redirect_url) {
+        echo '<input type="hidden" name="redirect" value="' . esc_attr($redirect_url) . '" />';
     }
 });
 
@@ -1413,10 +1440,63 @@ add_action('woocommerce_single_product_summary', function () {
 }, 7);
 
 /**
- * Single product: inline "Add to wishlist" link beside the product title (editorial hierarchy).
+ * Whether a wishlist plugin is active (YITH, TI, etc.). When true, the theme outputs the plugin button in the title row.
+ * Other plugins can declare themselves via the filter.
+ */
+function ss_wishlist_plugin_active() {
+    if (class_exists('YITH_WCWL', false) || class_exists('TInvWL', false)) {
+        return true;
+    }
+    return (bool) apply_filters('ss_wishlist_plugin_active', false);
+}
+
+/**
+ * Remove wishlist plugin default single-product hooks so we can place the button in the title row only.
+ */
+add_action('init', function () {
+    if (!class_exists('TInvWL', false)) {
+        return;
+    }
+    $positions = array(
+        array('tinvwl_before_add_to_cart_button', 'tinvwl_view_addto_html', 10),
+        array('tinvwl_single_product_summary', 'tinvwl_view_addto_htmlout', 10),
+        array('woocommerce_before_add_to_cart_button', 'tinvwl_view_addto_html', 9),
+        array('woocommerce_single_product_summary', 'tinvwl_view_addto_htmlout', 29),
+        array('catalog_visibility_before_alternate_add_to_cart_button', 'tinvwl_view_addto_html', 10),
+        array('tinvwl_after_add_to_cart_button', 'tinvwl_view_addto_html', 10),
+        array('woocommerce_after_add_to_cart_button', 'tinvwl_view_addto_html', 20),
+        array('woocommerce_single_product_summary', 'tinvwl_view_addto_htmlout', 31),
+        array('catalog_visibility_after_alternate_add_to_cart_button', 'tinvwl_view_addto_html', 10),
+        array('tinvwl_after_thumbnails', 'tinvwl_view_addto_html', 10),
+        array('woocommerce_product_thumbnails', 'tinvwl_view_addto_html', 21),
+        array('tinvwl_after_summary', 'tinvwl_view_addto_html', 10),
+        array('woocommerce_after_single_product_summary', 'tinvwl_view_addto_html', 11),
+    );
+    foreach ($positions as $p) {
+        remove_action($p[0], $p[1], isset($p[2]) ? $p[2] : 10);
+    }
+}, 999);
+
+/**
+ * Single product: wishlist control in title row (same placement as theme link).
+ * - If a wishlist plugin is active: output the plugin button here (after removing its default placement).
+ * - If no plugin: output theme fallback link (login redirect for guests).
  */
 add_action('woocommerce_single_product_summary', function () {
     if (!function_exists('is_product') || !is_product()) {
+        return;
+    }
+    if (ss_wishlist_plugin_active()) {
+        if (class_exists('TInvWL', false)) {
+            echo do_shortcode('[ti_wishlists_addtowishlist]');
+        } elseif (class_exists('YITH_WCWL', false)) {
+            echo do_shortcode('[yith_wcwl_add_to_wishlist]');
+        } else {
+            $html = apply_filters('ss_wishlist_button_html', '');
+            if ($html !== '') {
+                echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            }
+        }
         return;
     }
     $pid = get_the_ID();
@@ -1424,8 +1504,15 @@ add_action('woocommerce_single_product_summary', function () {
         return;
     }
     $wishlist_url = add_query_arg(['product_id' => $pid], home_url('/wishlist/'));
+
+    if (is_user_logged_in()) {
+        $href = $wishlist_url;
+    } else {
+        $myaccount_url = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/');
+        $href = add_query_arg('redirect', urlencode($wishlist_url), $myaccount_url);
+    }
     ?>
-    <a class="ss-pdp-wishlist-inline" href="<?php echo esc_url($wishlist_url); ?>" aria-label="<?php esc_attr_e('Add to wishlist', 'woocommerce'); ?>">
+    <a class="ss-pdp-wishlist-inline" href="<?php echo esc_url($href); ?>" aria-label="<?php esc_attr_e('Add to wishlist', 'woocommerce'); ?>">
         <span class="ss-pdp-wishlist-inline__icon" aria-hidden="true"></span>
         <?php esc_html_e('Add to wishlist', 'woocommerce'); ?>
     </a>
