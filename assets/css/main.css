@@ -546,11 +546,11 @@ body.single-product main,
 
 .ss-lookbook-item{
   display:grid;
-  grid-template-columns:707px max-content;
+  grid-template-columns:604px max-content;
   align-items:center;
   column-gap:24px;
   margin:0 auto;
-  width:min(990px,100%);
+  width:min(880px,100%);
 }
 
 /* Add a tiny controlled gap between image and button */
@@ -558,13 +558,13 @@ body.single-product main,
   margin-left: 14px;
 }
 .ss-lookbook-card{
-  width: min(707px, 100%);
-  max-width: 707px;
+  width: min(640px, 100%);
+  max-width: 604px;
 }
 .ss-lookbook-media{
   width: 100%;
-  max-width: 707px;
-  aspect-ratio: 707 / 812;
+  max-width: 640px;
+  aspect-ratio: 604 / 809;
   background: rgba(212,187,172,0.55);
   border: 1px solid rgba(61,19,23,0.10);
   box-shadow: 0 22px 70px rgba(61,19,23,0.16);
