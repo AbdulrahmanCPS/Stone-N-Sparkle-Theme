@@ -135,6 +135,17 @@ add_filter('woocommerce_login_redirect', function ($redirect, $user) {
     return $orders_url ? $orders_url : $redirect;
 }, 10, 2);
 
+/**
+ * WooCommerce: show "AED" instead of Arabic "د.إ" for UAE Dirham.
+ * Store currency must be set to AED in WooCommerce → Settings → General.
+ */
+add_filter('woocommerce_currency_symbol', function ($symbol, $currency) {
+    if ($currency === 'AED') {
+        return 'AED';
+    }
+    return $symbol;
+}, 10, 2);
+
 add_action('template_redirect', function () {
     if (!function_exists('is_account_page') || !is_account_page()) {
         return;

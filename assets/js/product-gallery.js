@@ -156,8 +156,21 @@
       return typeof window !== 'undefined' && window.innerWidth < 768;
     }
 
+    function resetZoom(){
+      if (isMobileViewport()) return;
+      state.zoomed = false;
+      var img = getActiveSlideImg();
+      if (img) {
+        img.style.transition = 'transform 0.2s ease';
+        img.style.transform = 'scale(1) translate(0px, 0px)';
+      }
+    }
+
     if (prevBtn) prevBtn.addEventListener('click', function(){ show(state.index - 1); });
     if (nextBtn) nextBtn.addEventListener('click', function(){ show(state.index + 1); });
+
+    if (prevBtn) prevBtn.addEventListener('mouseenter', resetZoom);
+    if (nextBtn) nextBtn.addEventListener('mouseenter', resetZoom);
 
     if (viewport) {
       /* Desktop zoom on current slide image */
@@ -184,15 +197,7 @@
         img.style.transform = 'scale(' + ZOOM_SCALE + ') translate(' + (tx / ZOOM_SCALE) + 'px, ' + (ty / ZOOM_SCALE) + 'px)';
       });
 
-      viewport.addEventListener('mouseleave', function(){
-        if (isMobileViewport()) return;
-        state.zoomed = false;
-        var img = getActiveSlideImg();
-        if (img) {
-          img.style.transition = 'transform 0.2s ease';
-          img.style.transform = 'scale(1) translate(0px, 0px)';
-        }
-      });
+      viewport.addEventListener('mouseleave', resetZoom);
 
       /* Mobile: slider that follows finger, then snaps. Higher = less physical swipe needed. */
       var SWIPE_SENSITIVITY = 1.8;
