@@ -1531,39 +1531,14 @@ add_action('woocommerce_single_product_summary', function () {
 }, 6);
 
 /**
- * Single product: "Request Private View" only (wishlist moved to title row). Same row as Add to cart.
  * Category archive layout helpers (editorial image + product flow)
  */
 require_once get_template_directory() . '/inc/category-archive-helpers.php';
 
 /**
- * Single product: add "Request Private View" + "Add To Wishlist" buttons
- * directly under the main Add to cart button.
+ * Private View request modal + storage workflow.
  */
-add_action('woocommerce_after_add_to_cart_button', function () {
-    if (!function_exists('is_product') || !is_product()) {
-        return;
-    }
-
-    if (!function_exists('wc_get_product')) {
-        return;
-    }
-
-    global $product;
-    if (!$product || !is_a($product, 'WC_Product')) {
-        $product = wc_get_product(get_the_ID());
-    }
-    if (!$product) {
-        return;
-    }
-
-    $pid = $product->get_id();
-    $private_url = add_query_arg(['product_id' => $pid], home_url('/private-viewing/'));
-
-    echo '<div class="ss-pdp-secondary" role="group" aria-label="Product actions">';
-    echo '<a class="ss-pdp-btn" href="' . esc_url($private_url) . '">Request Private View</a>';
-    echo '</div>';
-}, 25);
+require_once get_template_directory() . '/inc/private-view-request.php';
 
 /**
  * WooCommerce: Remove product tabs (Description / Reviews / Additional info)

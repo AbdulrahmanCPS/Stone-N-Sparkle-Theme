@@ -57,6 +57,7 @@
   });
 })();
 
+
 /**
  * Newsletter Popup (ACF Options)
  * - Keeps behavior simple: show by trigger + respect frequency.
@@ -461,5 +462,79 @@
     document.addEventListener('DOMContentLoaded', initSizeChartModal, { once: true });
   } else {
     initSizeChartModal();
+  }
+})();
+
+/**
+ * Private View modal
+ */
+(function(){
+  const modal = document.getElementById('ssPrivateViewModal');
+  if (!modal) return;
+
+  const dialog = modal.querySelector('.ss-private-view-modal__dialog');
+  const openers = document.querySelectorAll('[data-ss-private-view-open]');
+  const closers = modal.querySelectorAll('[data-ss-private-view-close]');
+  let lastFocus = null;
+
+  const focusablesQuery = 'a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])';
+
+  const setOpen = (open) => {
+    modal.classList.toggle('is-open', open);
+    modal.setAttribute('aria-hidden', open ? 'false' : 'true');
+    document.documentElement.classList.toggle('ss-no-scroll', open);
+
+    if (open) {
+      lastFocus = document.activeElement;
+      const target = modal.querySelector('input, select, textarea, button');
+      if (target && typeof target.focus === 'function') {
+        window.setTimeout(() => target.focus({ preventScroll: true }), 40);
+      }
+    } else if (lastFocus && typeof lastFocus.focus === 'function') {
+      lastFocus.focus({ preventScroll: true });
+      lastFocus = null;
+    }
+  };
+
+  openers.forEach((opener) => {
+    opener.addEventListener('click', function(e){
+      e.preventDefault();
+      setOpen(true);
+    });
+  });
+
+  closers.forEach((closer) => {
+    closer.addEventListener('click', function(e){
+      e.preventDefault();
+      setOpen(false);
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (!modal.classList.contains('is-open')) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setOpen(false);
+      return;
+    }
+
+    if (e.key !== 'Tab' || !dialog) return;
+    const focusables = dialog.querySelectorAll(focusablesQuery);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  if (modal.getAttribute('data-auto-open') === '1') {
+    setOpen(true);
   }
 })();

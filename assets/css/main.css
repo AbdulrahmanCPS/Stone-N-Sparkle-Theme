@@ -3390,3 +3390,116 @@ body.single-product .woocommerce .variations select:disabled,
   }
 }
 
+/* Private View Request modal */
+.ss-private-view-modal .ss-popup__dialog {
+  max-width: 760px;
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ss-private-view-modal {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ss-private-view-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.ss-private-view-modal .ss-popup__field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ss-private-view-modal .ss-popup__field input,
+.ss-private-view-modal .ss-popup__field select,
+.ss-private-view-modal .ss-popup__field textarea {
+  width: 100%;
+  border: 1px solid rgba(53, 53, 53, 0.28);
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+  padding: 12px 14px;
+  font-size: 0.96rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ss-private-view-modal .ss-popup__field input:focus,
+.ss-private-view-modal .ss-popup__field select:focus,
+.ss-private-view-modal .ss-popup__field textarea:focus {
+  border-color: rgba(111, 78, 55, 0.65);
+  box-shadow: 0 0 0 3px rgba(111, 78, 55, 0.14);
+  outline: none;
+}
+
+.ss-popup__field--full {
+  grid-column: 1 / -1;
+}
+
+.ss-private-view-form__consent {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ss-private-view-form__consent input[type="checkbox"] {
+  margin-top: 2px;
+}
+
+.ss-private-view-feedback {
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  font-size: 0.92rem;
+}
+
+.ss-private-view-feedback--success {
+  background: rgba(20, 98, 62, 0.08);
+  border: 1px solid rgba(20, 98, 62, 0.22);
+  color: #10472f;
+}
+
+.ss-private-view-feedback--error {
+  background: rgba(141, 30, 30, 0.07);
+  border: 1px solid rgba(141, 30, 30, 0.24);
+  color: #5c1414;
+}
+
+.ss-private-view-feedback--error p {
+  margin: 0 0 6px;
+}
+
+.ss-private-view-feedback--error ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.ss-private-view-form__hp {
+  position: absolute !important;
+  left: -9999px !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .ss-private-view-modal .ss-popup__dialog {
+    margin: 4vh auto;
+    max-height: 92vh;
+  }
+
+  .ss-private-view-form__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
