@@ -19,6 +19,33 @@ function ss_private_view_statuses() {
     ];
 }
 
+/**
+ * @param string $key
+ * @return string
+ */
+function ss_private_view_label_contact_method($key) {
+    $map = [
+        'email'    => __('Email', 'stone-sparkle'),
+        'phone'    => __('Phone', 'stone-sparkle'),
+        'whatsapp' => __('WhatsApp', 'stone-sparkle'),
+    ];
+    $key = sanitize_key($key);
+    return isset($map[$key]) ? $map[$key] : $key;
+}
+
+/**
+ * @param string $key
+ * @return string
+ */
+function ss_private_view_label_appointment_type($key) {
+    $map = [
+        'in-store' => __('In-store', 'stone-sparkle'),
+        'virtual'  => __('Virtual', 'stone-sparkle'),
+    ];
+    $key = sanitize_key($key);
+    return isset($map[$key]) ? $map[$key] : $key;
+}
+
 add_action('init', function () {
     register_post_type(SS_PRIVATE_VIEW_CPT, [
         'labels' => [
@@ -369,13 +396,15 @@ function ss_handle_private_view_request_submission() {
 
 add_filter('manage_' . SS_PRIVATE_VIEW_CPT . '_posts_columns', function ($columns) {
     $columns = [
-        'cb'         => isset($columns['cb']) ? $columns['cb'] : '',
-        'title'      => __('Request', 'stone-sparkle'),
-        'requester'  => __('Requester', 'stone-sparkle'),
-        'product'    => __('Product', 'stone-sparkle'),
-        'pref_dt'    => __('Preferred date/time', 'stone-sparkle'),
-        'status'     => __('Status', 'stone-sparkle'),
-        'date'       => __('Submitted', 'stone-sparkle'),
+        'cb'          => isset($columns['cb']) ? $columns['cb'] : '',
+        'title'       => __('Request', 'stone-sparkle'),
+        'requester'   => __('Requester', 'stone-sparkle'),
+        'product'     => __('Product', 'stone-sparkle'),
+        'appointment' => __('Appointment', 'stone-sparkle'),
+        'pref_dt'     => __('Preferred date/time', 'stone-sparkle'),
+        'notes'       => __('Message / notes', 'stone-sparkle'),
+        'status'      => __('Status', 'stone-sparkle'),
+        'date'        => __('Submitted', 'stone-sparkle'),
     ];
     return $columns;
 });
@@ -412,6 +441,30 @@ add_action('manage_' . SS_PRIVATE_VIEW_CPT . '_posts_custom_column', function ($
         return;
     }
 
+    if ($column === 'appointment') {
+        $appt = (string) get_post_meta($post_id, 'ss_pvr_appointment_type', true);
+        $contact = (string) get_post_meta($post_id, 'ss_pvr_contact_method', true);
+        echo esc_html(ss_private_view_label_appointment_type($appt));
+        if ($contact !== '') {
+            echo '<br><span class="description">' . esc_html(sprintf(
+                /* translators: %s: contact method label */
+                __('Via %s', 'stone-sparkle'),
+                ss_private_view_label_contact_method($contact)
+            )) . '</span>';
+        }
+        return;
+    }
+
+    if ($column === 'notes') {
+        $msg = (string) get_post_meta($post_id, 'ss_pvr_message', true);
+        if ($msg === '') {
+            echo '<span aria-hidden="true">—</span>';
+            return;
+        }
+        echo esc_html(wp_html_excerpt($msg, 100, '…'));
+        return;
+    }
+
     if ($column === 'status') {
         $value = (string) get_post_meta($post_id, SS_PRIVATE_VIEW_STATUS_META_KEY, true);
         $statuses = ss_private_view_statuses();
@@ -420,7 +473,125 @@ add_action('manage_' . SS_PRIVATE_VIEW_CPT . '_posts_custom_column', function ($
     }
 }, 10, 2);
 
+/**
+ * Read-only summary of submitted fields (stored in post meta).
+ *
+ * @param WP_Post $post
+ */
+function ss_render_private_view_details_metabox($post) {
+    $post_id = (int) $post->ID;
+    $product_id = (int) get_post_meta($post_id, 'ss_pvr_product_id', true);
+
+    $contact_raw = (string) get_post_meta($post_id, 'ss_pvr_contact_method', true);
+    $appt_raw = (string) get_post_meta($post_id, 'ss_pvr_appointment_type', true);
+
+    $rows = [
+        [
+            'key'   => 'full_name',
+            'label' => __('Full name', 'stone-sparkle'),
+            'value' => (string) get_post_meta($post_id, 'ss_pvr_full_name', true),
+        ],
+        [
+            'key'   => 'email',
+            'label' => __('Email', 'stone-sparkle'),
+            'value' => (string) get_post_meta($post_id, 'ss_pvr_email', true),
+        ],
+        [
+            'key'   => 'phone',
+            'label' => __('Phone', 'stone-sparkle'),
+            'value' => (string) get_post_meta($post_id, 'ss_pvr_phone', true),
+        ],
+        [
+            'key'   => 'contact_method',
+            'label' => __('Preferred contact method', 'stone-sparkle'),
+            'value' => $contact_raw !== '' ? ss_private_view_label_contact_method($contact_raw) : '',
+        ],
+        [
+            'key'   => 'appointment_type',
+            'label' => __('Appointment type', 'stone-sparkle'),
+            'value' => $appt_raw !== '' ? ss_private_view_label_appointment_type($appt_raw) : '',
+        ],
+        [
+            'key'   => 'preferred_datetime',
+            'label' => __('Preferred date and time', 'stone-sparkle'),
+            'value' => ss_private_view_format_datetime_for_human((string) get_post_meta($post_id, 'ss_pvr_preferred_datetime', true)),
+        ],
+        [
+            'key'   => 'product',
+            'label' => __('Product', 'stone-sparkle'),
+            'value' => '',
+        ],
+        [
+            'key'   => 'product_reference',
+            'label' => __('Product reference', 'stone-sparkle'),
+            'value' => (string) get_post_meta($post_id, 'ss_pvr_product_reference', true),
+        ],
+        [
+            'key'   => 'consent',
+            'label' => __('Consent to contact', 'stone-sparkle'),
+            'value' => ((string) get_post_meta($post_id, 'ss_pvr_consent', true) === '1')
+                ? __('Yes', 'stone-sparkle')
+                : __('No', 'stone-sparkle'),
+        ],
+    ];
+
+    echo '<table class="widefat striped ss-pvr-details" style="max-width:720px;">';
+    foreach ($rows as $row) {
+        if ($row['key'] === 'product') {
+            echo '<tr>';
+            echo '<th scope="row" style="width:200px;">' . esc_html($row['label']) . '</th>';
+            echo '<td>';
+            if ($product_id > 0) {
+                $title = get_the_title($product_id);
+                $url = get_edit_post_link($product_id);
+                if ($url) {
+                    echo '<a href="' . esc_url($url) . '">' . esc_html($title) . '</a>';
+                } else {
+                    echo esc_html($title);
+                }
+                echo ' <span class="description">(ID ' . (int) $product_id . ')</span>';
+            } else {
+                echo '<span class="description">' . esc_html__('Not linked', 'stone-sparkle') . '</span>';
+            }
+            echo '</td></tr>';
+            continue;
+        }
+
+        $val = $row['value'];
+        echo '<tr><th scope="row">' . esc_html($row['label']) . '</th><td>';
+        if ($row['key'] === 'email' && $val !== '' && is_email($val)) {
+            echo '<a href="mailto:' . esc_attr($val) . '">' . esc_html($val) . '</a>';
+        } else {
+            echo $val !== '' ? esc_html($val) : '<span class="description">' . esc_html__('—', 'stone-sparkle') . '</span>';
+        }
+        echo '</td></tr>';
+    }
+
+    $message = (string) get_post_meta($post_id, 'ss_pvr_message', true);
+    echo '<tr><th scope="row" style="vertical-align:top;">' . esc_html__('Message / notes', 'stone-sparkle') . '</th><td>';
+    if ($message !== '') {
+        echo '<div style="white-space:pre-wrap;max-height:240px;overflow:auto;">' . esc_html($message) . '</div>';
+    } else {
+        echo '<span class="description">' . esc_html__('None', 'stone-sparkle') . '</span>';
+    }
+    echo '</td></tr>';
+    echo '</table>';
+    echo '<p class="description">' . esc_html__(
+        'These details were submitted from the storefront form and are read-only here.',
+        'stone-sparkle'
+    ) . '</p>';
+}
+
 add_action('add_meta_boxes', function () {
+    add_meta_box(
+        'ss_private_view_details_box',
+        __('Request details', 'stone-sparkle'),
+        'ss_render_private_view_details_metabox',
+        SS_PRIVATE_VIEW_CPT,
+        'normal',
+        'high'
+    );
+
     add_meta_box(
         'ss_private_view_status_box',
         __('Private View Status', 'stone-sparkle'),

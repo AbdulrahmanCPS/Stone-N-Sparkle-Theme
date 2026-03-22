@@ -3471,18 +3471,25 @@ body.single-product .woocommerce .variations select:disabled,
 }
 
 .ss-private-view-feedback--error {
-  background: rgba(141, 30, 30, 0.07);
-  border: 1px solid rgba(141, 30, 30, 0.24);
-  color: #5c1414;
+  /* Light panel so red text reads clearly on the dark modal */
+  background: rgba(255, 245, 245, 0.97);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #dc2626;
 }
 
 .ss-private-view-feedback--error p {
   margin: 0 0 6px;
+  color: inherit;
 }
 
 .ss-private-view-feedback--error ul {
   margin: 0;
   padding-left: 18px;
+  color: inherit;
+}
+
+.ss-private-view-feedback--error li {
+  color: inherit;
 }
 
 .ss-private-view-form__hp {
