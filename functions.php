@@ -766,10 +766,10 @@ add_action('acf/include_fields', function() {
 
 /**
  * WooCommerce: Custom single-product image gallery
- * - Fixed 576x576 stage
- * - Left thumbnails
- * - Prev/Next controls
- * - Wheel zoom + drag pan (JS)
+ * - Fixed 576x576 stage (desktop)
+ * - Left thumbnails (desktop); row below stage on narrow viewports (max-width: 767.98px)
+ * - Prev/Next controls (desktop); hidden on narrow viewports — thumbnails only
+ * - Desktop: hover zoom + pointer pan (JS). Mobile/narrow: press-and-hold touch zoom (ends on release)
  */
 add_action('wp', function () {
     if (!function_exists('is_product') || !is_product()) {

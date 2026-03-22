@@ -121,26 +121,44 @@
 .ss-gallery-prev{ left:12px; }
 .ss-gallery-next{ right:12px; }
 
-@media (max-width: 768px){
+@media (max-width: 767.98px){
   .ss-product-gallery{
     flex-direction: column;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    align-items: center;
   }
   .ss-product-stage{
+    order: 1;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+  }
+  .ss-product-thumbs{
+    order: 2;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
   }
   .ss-stage-viewport{
     width: 100%;
     max-width: 100%;
     height: auto;
     aspect-ratio: 1/1;
+    touch-action: none;
   }
-  .ss-product-thumbs{ display: none !important; }
-  .ss-thumb-btn{ width:64px; height:64px; }
+  .ss-gallery-nav{
+    display: none !important;
+  }
+  .ss-thumb-btn{ width:64px; height:64px; flex-shrink: 0; }
 }
 
 /* Smooth snap when slider settles */
