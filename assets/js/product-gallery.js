@@ -184,9 +184,19 @@
       });
 
       viewport.addEventListener('mousemove', function(e){
-        if (isMobileViewport() || !state.zoomed) return;
+        if (isMobileViewport()) return;
+        var t = e.target;
+        var hitEl = t && t.nodeType === 1 ? t : (t && t.parentElement);
+        if (hitEl && hitEl.closest && hitEl.closest('.ss-gallery-nav')) {
+          resetZoom();
+          return;
+        }
         var img = getActiveSlideImg();
         if (!img) return;
+        if (!state.zoomed) {
+          img.style.transition = 'transform 0.2s ease';
+          state.zoomed = true;
+        }
         var rect = viewport.getBoundingClientRect();
         var xPct = (e.clientX - rect.left) / rect.width;
         var yPct = (e.clientY - rect.top) / rect.height;
