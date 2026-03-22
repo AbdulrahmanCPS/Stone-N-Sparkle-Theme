@@ -7,6 +7,9 @@ if (!defined('ABSPATH')) { exit; }
 
 define('SS_THEME_VERSION', '0.2.1');
 
+require_once get_template_directory() . '/inc/search-overlay.php';
+require_once get_template_directory() . '/inc/search-results-query.php';
+
 /**
  * WooCommerce: Header cart link (with live-updating count badge)
  */
@@ -80,14 +83,87 @@ add_action('after_setup_theme', function () {
 
 /**
  * Front page: show only the site name in the document title (e.g. "Stone and Sparkle").
+ * Search: "You searched for {query} – {site name}" for clearer browser tabs.
  * Other pages keep the default title (page/post title + site name, SEO plugins, etc.).
  */
 add_filter('pre_get_document_title', function ($title) {
     if (is_front_page()) {
         return get_bloginfo('name');
     }
+    if (is_search()) {
+        $q = get_search_query();
+        if ($q !== '') {
+            return sprintf(
+                /* translators: 1: search keywords, 2: site name */
+                __('You searched for %1$s – %2$s', 'stone-sparkle'),
+                $q,
+                get_bloginfo('name')
+            );
+        }
+    }
     return $title;
 });
+
+/**
+ * WooCommerce Coming Soon: still render product search (?s=&post_type=product).
+ * Otherwise WC shows the placeholder for the whole storefront, including search.php.
+ *
+ * @link https://developer.woocommerce.com/docs/integrating-with-coming-soon-mode/
+ */
+add_filter('woocommerce_coming_soon_exclude', function ($excluded) {
+    if ($excluded) {
+        return true;
+    }
+    return function_exists('ss_is_frontend_product_search_request') && ss_is_frontend_product_search_request();
+}, 10);
+
+/**
+ * Product search results: body class for brand search layout (toolbar + spacing; scoped CSS).
+ */
+add_filter('body_class', function ($classes) {
+    if (!function_exists('wc_get_product')) {
+        return $classes;
+    }
+    $product_search = false;
+    if (is_search()) {
+        $pt = get_query_var('post_type');
+        $pt_one = is_array($pt) ? reset($pt) : $pt;
+        $product_search = ($pt_one === 'product');
+    }
+    if (!$product_search && function_exists('ss_is_product_search_toolbar_request')) {
+        $product_search = ss_is_product_search_toolbar_request();
+    }
+    if ($product_search) {
+        $classes[] = 'ss-search-page--products';
+    }
+    return $classes;
+});
+
+/**
+ * Product search: always use theme search.php (dedicated listing), not shop archive with lookbook.
+ */
+add_filter('template_include', function ($template) {
+    if (!function_exists('wc_get_product')) {
+        return $template;
+    }
+    $product_search = false;
+    if (is_search()) {
+        $pt = get_query_var('post_type');
+        $pt_one = is_array($pt) ? reset($pt) : $pt;
+        $product_search = ($pt_one === 'product');
+    }
+    if (!$product_search && function_exists('ss_is_product_search_toolbar_request')) {
+        $product_search = ss_is_product_search_toolbar_request();
+    }
+    if (!$product_search) {
+        return $template;
+    }
+    $search_template = locate_template('search.php');
+    if ($search_template === '') {
+        return $template;
+    }
+    return $search_template;
+}, 99);
 
 /**
  * WooCommerce: archive UI cleanup

@@ -10,24 +10,49 @@
   const panel = drawer.querySelector('.ss-drawer__panel');
   let lastFocus = null;
 
+  const otherModalLocksOpen = () => {
+    const search = document.getElementById('ssSearchOverlay');
+    const popup = document.getElementById('ssNewsletterPopup');
+    return Boolean(
+      (search && search.classList.contains('is-open')) ||
+      (popup && popup.classList.contains('is-open'))
+    );
+  };
+
   const setOpen = (open) => {
     drawer.classList.toggle('is-open', open);
     drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
     burger.setAttribute('aria-expanded', open ? 'true' : 'false');
-    document.documentElement.classList.toggle('ss-no-scroll', open);
 
     if (open) {
+      document.documentElement.classList.add('ss-no-scroll');
       lastFocus = document.activeElement;
-      // Focus the close button for accessibility (preventScroll avoids page jump on mobile).
       const closeBtn = drawer.querySelector('.ss-drawer__close');
       if (closeBtn) closeBtn.focus({ preventScroll: true });
-    } else if (lastFocus && typeof lastFocus.focus === 'function') {
-      lastFocus.focus();
+    } else {
+      if (!otherModalLocksOpen()) {
+        document.documentElement.classList.remove('ss-no-scroll');
+      }
+      if (lastFocus && typeof lastFocus.focus === 'function') {
+        lastFocus.focus();
+      }
       lastFocus = null;
     }
   };
 
-  burger.addEventListener('click', () => setOpen(!drawer.classList.contains('is-open')));
+  document.addEventListener('ss:force-close-drawer', () => {
+    if (!drawer.classList.contains('is-open')) return;
+    drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    burger.setAttribute('aria-expanded', 'false');
+    lastFocus = null;
+  });
+
+  burger.addEventListener('click', () => {
+    const opening = !drawer.classList.contains('is-open');
+    if (opening) document.dispatchEvent(new CustomEvent('ss:force-close-search'));
+    setOpen(opening);
+  });
   closeEls.forEach((el) => el.addEventListener('click', () => setOpen(false)));
 
   document.addEventListener('keydown', (e) => {
@@ -55,6 +80,386 @@
       }
     }
   });
+})();
+
+/**
+ * Header search overlay (AJAX + progressive GET fallback)
+ */
+(function(){
+  const cfg = (typeof window.SS_SEARCH === 'object' && window.SS_SEARCH) ? window.SS_SEARCH : null;
+  const overlay = document.getElementById('ssSearchOverlay');
+  const openBtn = document.querySelector('.ss-search-open');
+  if (!cfg || !overlay || !openBtn) return;
+
+  const panel = overlay.querySelector('.ss-search-overlay__panel');
+  const form = document.getElementById('ss-search-form');
+  const input = document.getElementById('ss-search-input');
+  const suggList = document.getElementById('ss-search-suggestions');
+  const suggEmpty = document.getElementById('ss-search-suggestions-empty');
+  const productsEl = document.getElementById('ss-search-products');
+  const prodEmpty = document.getElementById('ss-search-products-empty');
+  const cta = document.getElementById('ss-search-cta');
+  const ctaText = cta ? cta.querySelector('.ss-search-cta-text') : null;
+  const expand = document.getElementById('ss-search-expand');
+
+  if (!panel || !form || !input || !suggList || !suggEmpty || !productsEl || !prodEmpty || !cta || !ctaText) return;
+
+  const minChars = Number.isFinite(+cfg.minChars) ? +cfg.minChars : 2;
+  const str = cfg.strings || {};
+
+  let lastFocus = null;
+  let debounceId = null;
+  let requestId = 0;
+  let prevTrimLen = 0;
+  let aborter = null;
+
+  const setResultsExpanded = (on) => {
+    panel.classList.toggle('is-expanded', on);
+    if (expand) expand.hidden = !on;
+  };
+
+  const syncExpandFromInput = () => {
+    const t = input.value.trim();
+    setResultsExpanded(t.length >= minChars);
+  };
+
+  /** Focus the field (sync + rAF + timers) so keyboard works right after opening, including mobile. */
+  const focusSearchInput = () => {
+    if (!input || typeof input.focus !== 'function') return;
+    const run = () => {
+      try {
+        input.focus({ preventScroll: true });
+      } catch (_) {
+        input.focus();
+      }
+    };
+    run();
+    window.requestAnimationFrame(() => {
+      run();
+      window.requestAnimationFrame(run);
+    });
+    window.setTimeout(run, 0);
+    window.setTimeout(run, 80);
+  };
+
+  const otherLocksExcludingSearch = () => Boolean(
+    document.getElementById('ssPrimaryNav')?.classList.contains('is-open') ||
+    document.getElementById('ssNewsletterPopup')?.classList.contains('is-open')
+  );
+
+  const setOpen = (open) => {
+    if (open) {
+      document.dispatchEvent(new CustomEvent('ss:force-close-drawer'));
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      openBtn.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('ss-no-scroll');
+      lastFocus = document.activeElement;
+      focusSearchInput();
+      window.setTimeout(() => {
+        syncExpandFromInput();
+        const t0 = input.value.trim();
+        prevTrimLen = t0.length;
+        if (t0.length >= minChars) {
+          window.clearTimeout(debounceId);
+          runSearch(t0);
+        }
+        focusSearchInput();
+      }, 10);
+    } else {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      openBtn.setAttribute('aria-expanded', 'false');
+      if (!otherLocksExcludingSearch()) {
+        document.documentElement.classList.remove('ss-no-scroll');
+      }
+      if (lastFocus && typeof lastFocus.focus === 'function') {
+        lastFocus.focus();
+      }
+      lastFocus = null;
+      setResultsExpanded(false);
+      prevTrimLen = 0;
+      if (aborter) aborter.abort();
+      window.clearTimeout(debounceId);
+    }
+  };
+
+  document.addEventListener('ss:force-close-search', () => {
+    if (!overlay.classList.contains('is-open')) return;
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    openBtn.setAttribute('aria-expanded', 'false');
+    setResultsExpanded(false);
+    prevTrimLen = 0;
+    if (aborter) aborter.abort();
+    window.clearTimeout(debounceId);
+  });
+
+  const buildViewUrl = (term) => {
+    const u = new URL(form.getAttribute('action') || window.location.href, window.location.origin);
+    u.search = '';
+    if (term) u.searchParams.set('s', term);
+    const pt = form.querySelector('input[name="post_type"]');
+    if (pt && pt.value) u.searchParams.set('post_type', pt.value);
+    return u.toString();
+  };
+
+  const appendHighlighted = (container, text, needle) => {
+    container.replaceChildren();
+    if (!needle) {
+      container.appendChild(document.createTextNode(text));
+      return;
+    }
+    const lower = text.toLowerCase();
+    const n = needle.toLowerCase();
+    let start = 0;
+    let idx = lower.indexOf(n, start);
+    if (idx === -1) {
+      container.appendChild(document.createTextNode(text));
+      return;
+    }
+    while (idx !== -1) {
+      if (idx > start) container.appendChild(document.createTextNode(text.slice(start, idx)));
+      const strong = document.createElement('strong');
+      strong.className = 'ss-search-hit';
+      strong.textContent = text.slice(idx, idx + needle.length);
+      container.appendChild(strong);
+      start = idx + needle.length;
+      idx = lower.indexOf(n, start);
+    }
+    if (start < text.length) container.appendChild(document.createTextNode(text.slice(start)));
+  };
+
+  const updateCta = (term) => {
+    const q = term.trim();
+    const wrap = str.wrapQuotes || '"%s"';
+    if (q.length < minChars) {
+      cta.setAttribute('aria-disabled', 'true');
+      cta.classList.add('is-disabled');
+      cta.setAttribute('href', '#');
+      ctaText.textContent = '';
+      return;
+    }
+    cta.removeAttribute('aria-disabled');
+    cta.classList.remove('is-disabled');
+    const quoted = wrap.replace('%s', q);
+    ctaText.textContent = (str.ctaPrefix ? str.ctaPrefix + ' ' : '') + quoted;
+  };
+
+  const renderSuggestions = (items, term) => {
+    suggList.innerHTML = '';
+    items.forEach((item) => {
+      const li = document.createElement('li');
+      li.className = 'ss-search-suggestion';
+      const a = document.createElement('a');
+      a.href = item.url;
+      appendHighlighted(a, item.label, term);
+      li.appendChild(a);
+      suggList.appendChild(li);
+    });
+  };
+
+  const renderProducts = (items) => {
+    productsEl.innerHTML = '';
+    items.forEach((item) => {
+      const a = document.createElement('a');
+      a.className = 'ss-search-product';
+      a.href = item.url;
+      const thumb = document.createElement('div');
+      thumb.className = 'ss-search-product__thumb';
+      if (item.thumb) {
+        const img = document.createElement('img');
+        img.src = item.thumb;
+        img.alt = '';
+        img.loading = 'eager';
+        img.decoding = 'async';
+        if ('fetchPriority' in img) img.fetchPriority = 'high';
+        thumb.appendChild(img);
+      }
+      const meta = document.createElement('div');
+      meta.className = 'ss-search-product__meta';
+      const title = document.createElement('div');
+      title.className = 'ss-search-product__title';
+      title.textContent = item.title;
+      meta.appendChild(title);
+      if (item.price_html) {
+        const price = document.createElement('div');
+        price.className = 'ss-search-product__price';
+        price.innerHTML = item.price_html;
+        meta.appendChild(price);
+      }
+      a.appendChild(thumb);
+      a.appendChild(meta);
+      productsEl.appendChild(a);
+    });
+  };
+
+  const resetResults = () => {
+    suggList.innerHTML = '';
+    productsEl.innerHTML = '';
+    suggEmpty.hidden = true;
+    prodEmpty.hidden = true;
+    panel.removeAttribute('aria-busy');
+  };
+
+  const runSearch = (term) => {
+    const t = term.trim();
+    requestId++;
+    const myId = requestId;
+    if (t.length < minChars) {
+      resetResults();
+      cta.href = buildViewUrl('');
+      updateCta(t);
+      return;
+    }
+    if (aborter) aborter.abort();
+    aborter = new AbortController();
+    const ac = aborter;
+    panel.setAttribute('aria-busy', 'true');
+    const fd = new FormData();
+    fd.append('action', cfg.action);
+    fd.append('nonce', cfg.nonce);
+    fd.append('term', t);
+
+    fetch(cfg.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin', signal: ac.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        if (myId !== requestId) return;
+        panel.removeAttribute('aria-busy');
+        if (!data || !data.success || !data.data) return;
+        const d = data.data;
+        renderSuggestions(d.suggestions || [], t);
+        renderProducts(d.products || []);
+        cta.href = d.view_url || buildViewUrl(t);
+        updateCta(t);
+        const emptyMsg = str.noResults || '';
+        const noSugg = !d.suggestions || !d.suggestions.length;
+        const noProd = !d.products || !d.products.length;
+        suggEmpty.textContent = emptyMsg;
+        suggEmpty.hidden = !noSugg;
+        prodEmpty.textContent = emptyMsg;
+        prodEmpty.hidden = !noProd;
+      })
+      .catch((err) => {
+        if (err && err.name === 'AbortError') return;
+        if (myId !== requestId) return;
+        panel.removeAttribute('aria-busy');
+        cta.href = buildViewUrl(t);
+        updateCta(t);
+      });
+  };
+
+  const scheduleSearch = (term) => {
+    window.clearTimeout(debounceId);
+    debounceId = window.setTimeout(() => runSearch(term), 120);
+  };
+
+  openBtn.addEventListener('click', () => {
+    const opening = !overlay.classList.contains('is-open');
+    setOpen(opening);
+    if (opening) {
+      focusSearchInput();
+    }
+  });
+  overlay.querySelectorAll('[data-ss-search-close]').forEach((el) => {
+    el.addEventListener('click', () => setOpen(false));
+  });
+
+  input.addEventListener('input', () => {
+    const v = input.value;
+    const t = v.trim();
+    const lenOk = t.length >= minChars;
+
+    setResultsExpanded(lenOk);
+
+    if (!lenOk) {
+      window.clearTimeout(debounceId);
+      if (aborter) aborter.abort();
+      resetResults();
+      cta.href = buildViewUrl('');
+      prevTrimLen = t.length;
+      updateCta(v);
+      return;
+    }
+
+    const crossed = prevTrimLen < minChars && t.length >= minChars;
+    prevTrimLen = t.length;
+
+    if (crossed) {
+      window.clearTimeout(debounceId);
+      runSearch(t);
+    } else {
+      scheduleSearch(t);
+    }
+    updateCta(v);
+  });
+
+  cta.addEventListener('click', (e) => {
+    if (cta.classList.contains('is-disabled') || cta.getAttribute('aria-disabled') === 'true') {
+      e.preventDefault();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!overlay.classList.contains('is-open')) return;
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setOpen(false);
+      return;
+    }
+
+    if (e.key === 'Tab' && panel) {
+      const focusables = panel.querySelectorAll(
+        'a[href]:not([tabindex="-1"]), button:not([disabled]):not([hidden]), input:not([disabled]), textarea:not([disabled]), select:not([disabled])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
+})();
+
+/**
+ * Product search results: fade/slide in grid items on scroll.
+ */
+(function(){
+  const root = document.querySelector('.ss-search-results-page');
+  if (!root) return;
+  const items = root.querySelectorAll('ul.products li.product');
+  if (!items.length) return;
+
+  const revealAll = () => {
+    items.forEach((li) => li.classList.add('is-ss-revealed'));
+  };
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    revealAll();
+    return;
+  }
+
+  if (typeof IntersectionObserver !== 'function') {
+    revealAll();
+    return;
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-ss-revealed');
+      io.unobserve(entry.target);
+    });
+  }, { root: null, rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
+
+  items.forEach((li) => io.observe(li));
 })();
 
 /**
@@ -103,7 +508,15 @@
   const setOpen = (open) => {
     popup.classList.toggle('is-open', open);
     popup.setAttribute('aria-hidden', open ? 'false' : 'true');
-    document.documentElement.classList.toggle('ss-no-scroll', open);
+    if (open) {
+      document.documentElement.classList.add('ss-no-scroll');
+    } else {
+      const drawerOpen = document.getElementById('ssPrimaryNav')?.classList.contains('is-open');
+      const searchOpen = document.getElementById('ssSearchOverlay')?.classList.contains('is-open');
+      if (!drawerOpen && !searchOpen) {
+        document.documentElement.classList.remove('ss-no-scroll');
+      }
+    }
 
     if (open) {
       storage.set(now());
