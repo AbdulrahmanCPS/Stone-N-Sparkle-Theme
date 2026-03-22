@@ -3,6 +3,9 @@
  * WooCommerce Product Archive (Shop)
  *
  * Layout: Top lookbook (images 1–2) → Products → Bottom lookbook (images 3–5)
+ *
+ * Product-only search (?s=…&post_type=product) is handled by search.php; see template_include
+ * filter in functions.php so this template is not used for that case.
  */
 
 defined('ABSPATH') || exit;

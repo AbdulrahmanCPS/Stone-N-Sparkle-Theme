@@ -47,6 +47,19 @@ if (!defined('ABSPATH')) { exit; }
       <?php
         $account_url = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/');
       ?>
+      <button
+        class="ss-icon-btn ss-search-open"
+        type="button"
+        aria-haspopup="dialog"
+        aria-controls="ssSearchOverlay"
+        aria-expanded="false"
+        aria-label="<?php esc_attr_e('Open search', 'stone-sparkle'); ?>"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M16 16 21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </button>
       <?php
         if (function_exists('ss_render_cart_link')) {
           echo ss_render_cart_link();
@@ -89,5 +102,89 @@ if (!defined('ABSPATH')) { exit; }
       }
       ?>
     </nav>
+  </div>
+</div>
+
+<?php
+$ss_search_wc     = function_exists('wc_get_product');
+$ss_search_action = esc_url(home_url('/'));
+?>
+<div id="ssSearchOverlay" class="ss-search-overlay" aria-hidden="true">
+  <div class="ss-search-overlay__backdrop" data-ss-search-close tabindex="-1" aria-hidden="true"></div>
+
+  <div
+    class="ss-search-overlay__panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ss-search-heading"
+  >
+    <form class="ss-search-form" method="get" action="<?php echo $ss_search_action; ?>" id="ss-search-form" role="search">
+      <?php if ($ss_search_wc) : ?>
+        <input type="hidden" name="post_type" value="product">
+      <?php endif; ?>
+
+      <div class="ss-search-top">
+        <div class="ss-search-field">
+          <label class="ss-search-label ss-sr-only" for="ss-search-input" id="ss-search-heading">
+            <?php esc_html_e('Search', 'stone-sparkle'); ?>
+          </label>
+          <div class="ss-search-input-row">
+            <input
+              type="text"
+              name="s"
+              id="ss-search-input"
+              class="ss-search-input"
+              autocomplete="off"
+              inputmode="search"
+              enterkeyhint="search"
+              placeholder="<?php esc_attr_e('Search', 'stone-sparkle'); ?>"
+              value=""
+              aria-describedby="ss-search-hint"
+            >
+            <button class="ss-search-submit-icon" type="submit" aria-label="<?php esc_attr_e('Submit search', 'stone-sparkle'); ?>">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M16 16 21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button
+          class="ss-search-close"
+          type="button"
+          data-ss-search-close
+          aria-label="<?php esc_attr_e('Close search', 'stone-sparkle'); ?>"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <span class="ss-sr-only" id="ss-search-hint"><?php esc_html_e('Type at least two characters to search products. Results appear below.', 'stone-sparkle'); ?></span>
+
+      <div class="ss-search-expand" id="ss-search-expand" hidden>
+        <div class="ss-search-body">
+          <div class="ss-search-columns">
+            <div class="ss-search-col ss-search-col--suggestions">
+              <h3 class="ss-search-section-label"><?php esc_html_e('Suggestions', 'stone-sparkle'); ?></h3>
+              <ul class="ss-search-list" id="ss-search-suggestions"></ul>
+              <p class="ss-search-empty" id="ss-search-suggestions-empty" hidden></p>
+            </div>
+            <div class="ss-search-col ss-search-col--products">
+              <h3 class="ss-search-section-label"><?php esc_html_e('Products', 'stone-sparkle'); ?></h3>
+              <div class="ss-search-products" id="ss-search-products"></div>
+              <p class="ss-search-empty" id="ss-search-products-empty" hidden></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ss-search-footer">
+          <a class="ss-search-cta" id="ss-search-cta" href="<?php echo esc_url(home_url('/')); ?>" aria-disabled="true">
+            <span class="ss-search-cta-text"></span>
+            <span class="ss-search-cta-arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+      </div>
+    </form>
   </div>
 </div>
