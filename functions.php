@@ -1335,6 +1335,27 @@ add_action('template_redirect', function () {
 });
 
 /**
+ * Send visitors from the WooCommerce shop archive (typically /shop/) to the site home.
+ * WooCommerce still needs a Shop page assigned in settings; this only affects the public URL.
+ */
+add_action('template_redirect', function () {
+    if (is_admin() || wp_doing_ajax() || (defined('REST_REQUEST') && REST_REQUEST)) {
+        return;
+    }
+    if (function_exists('is_customize_preview') && is_customize_preview()) {
+        return;
+    }
+    if (is_feed()) {
+        return;
+    }
+    if (!function_exists('is_shop') || !is_shop() || is_search()) {
+        return;
+    }
+    wp_safe_redirect(home_url('/'), 301);
+    exit;
+}, 5);
+
+/**
  * Register a simple block pattern for the homepage lookbook layout.
  * The design is handled by CSS classes (ss-lookbook, ss-look, ss-look-card).
  */
