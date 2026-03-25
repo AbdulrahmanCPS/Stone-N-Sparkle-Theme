@@ -1,0 +1,24 @@
+# Branch Protection Rules for Main
+
+## Overview
+In order to keep the main branch stable and ensure that the code being merged is of high quality, it's essential to set up branch protection rules. These rules help prevent direct pushes, enforce code reviews, and ensure passing CI checks before merging any code to main.
+
+## Main Branch Protection Rules
+1. **Require Pull Request Reviews**: All changes must be made through pull requests. The pull requests must be reviewed and approved by at least one other team member before they can be merged.
+
+2. **Require Status Checks to Pass Before Merging**: All status checks, such as CI/CD tests, must report success before a pull request can be merged into the main branch.
+
+3. **Restrict Who Can Push to the Branch**: Only specified personnel (such as team leads or maintainers) should have the ability to push directly to the main branch.
+
+4. **Require Signed Commits**: All commits must be signed to verify the authenticity of the code being contributed.
+
+5. **Enforce Linear History**: Merges should be performed with a rebase strategy to maintain a cleaner project history without merge commits.
+
+## Automatic Enforcement via Cursor
+Cursor integrates with GitHub to automatically enforce these branch protection rules. Here’s how:
+- **Code Reviews**: Cursor can alert team members when a pull request is created, prompting them to review code changes and provide feedback through automated reminders.
+- **CI Integration**: Cursor can be configured to trigger CI/CD checks upon pull request creation and updates, ensuring that tests pass before merges.
+- **Push Restrictions**: Cursor monitors pushes to the main branch and can reject any direct push attempts by unauthorized users, ensuring compliance with the permission rules.
+- **Commit Signing**: Cursor can analyze commit messages to check for signatures, alerting developers when they need to sign their commits.
+
+By implementing these branch protection rules and leveraging Cursor's enforcement capabilities, we maintain a high standard of code quality and cooperation within the development team.
