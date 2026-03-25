@@ -105,13 +105,22 @@ add_filter('pre_get_document_title', function ($title) {
 });
 
 /**
- * WooCommerce Coming Soon: still render product search (?s=&post_type=product).
- * Otherwise WC shows the placeholder for the whole storefront, including search.php.
+ * WooCommerce Coming Soon: allow real templates for guests on key storefront views.
+ * WC hides the store from non-admins when "Coming soon" is on; without exclusions,
+ * single product URLs show the placeholder even though admins (manage_woocommerce) see PDPs.
+ *
+ * - Single product pages (incognito / logged-out shoppers).
+ * - Product search (?s=&post_type=product), same as before.
+ *
+ * To show the entire site to everyone, use WooCommerce → Settings → Site visibility → Live.
  *
  * @link https://developer.woocommerce.com/docs/integrating-with-coming-soon-mode/
  */
 add_filter('woocommerce_coming_soon_exclude', function ($excluded) {
     if ($excluded) {
+        return true;
+    }
+    if (function_exists('is_product') && is_product()) {
         return true;
     }
     return function_exists('ss_is_frontend_product_search_request') && ss_is_frontend_product_search_request();
@@ -376,6 +385,14 @@ add_action('wp_enqueue_scripts', function () {
             'stone-sparkle-quantity-stepper',
             get_template_directory_uri() . '/assets/js/quantity-stepper.js',
             [],
+            SS_THEME_VERSION,
+            true
+        );
+
+        wp_enqueue_script(
+            'stone-sparkle-variation-select',
+            get_template_directory_uri() . '/assets/js/variation-custom-select.js',
+            [ 'jquery', 'wc-add-to-cart-variation' ],
             SS_THEME_VERSION,
             true
         );
@@ -1535,7 +1552,7 @@ require_once get_template_directory() . '/inc/collection-page-cpt.php';
 require_once get_template_directory() . '/inc/collection-page-fields.php';
 
 /**
- * Single product: title row wrapper so we can place wishlist inline with title.
+ * Single product: title block wrapper — wishlist renders on the line below the title (see .ss-pdp-title-row CSS).
  */
 add_action('woocommerce_single_product_summary', function () {
     if (!function_exists('is_product') || !is_product()) {
@@ -1586,7 +1603,7 @@ add_action('init', function () {
 }, 999);
 
 /**
- * Single product: wishlist control in title row (same placement as theme link).
+ * Single product: wishlist below product title (inside .ss-pdp-title-row).
  * - If a wishlist plugin is active: output the plugin button here (after removing its default placement).
  * - If no plugin: output theme fallback link (login redirect for guests).
  */
@@ -1638,6 +1655,26 @@ require_once get_template_directory() . '/inc/category-archive-helpers.php';
 require_once get_template_directory() . '/inc/private-view-request.php';
 
 /**
+ * Variable product: output "Clear" after the variation price block, not inside the last attribute cell.
+ *
+ * @return void
+ */
+function ss_output_variations_reset_link() {
+    if (!function_exists('is_product') || !is_product()) {
+        return;
+    }
+    echo '<div class="ss-pdp-variation-actions">';
+    echo wp_kses_post(
+        apply_filters(
+            'woocommerce_reset_variations_link',
+            '<a class="reset_variations" href="#" aria-label="' . esc_attr__('Clear options', 'woocommerce') . '">' . esc_html__('Clear', 'woocommerce') . '</a>'
+        )
+    );
+    echo '</div>';
+}
+add_action('woocommerce_single_variation', 'ss_output_variations_reset_link', 15);
+
+/**
  * WooCommerce: Remove product tabs (Description / Reviews / Additional info)
  * and the shop sidebar on single product pages.
  */
@@ -1663,6 +1700,32 @@ add_action('wp', function () {
 add_filter('wc_add_to_cart_message_html', function ($message, $products) {
     return '';
 }, 10, 2);
+
+/**
+ * Checkout: hide Cash on delivery description only (title/method remain).
+ */
+add_filter('woocommerce_gateway_description', function ($description, $gateway_id) {
+    if ($gateway_id === 'cod') {
+        return '';
+    }
+    return $description;
+}, 10, 2);
+
+/**
+ * Product admin: default text color in Classic TinyMCE (short description / product editor fields).
+ */
+add_filter('tiny_mce_before_init', function ($init) {
+    if (!is_admin() || !function_exists('get_current_screen')) {
+        return $init;
+    }
+    $screen = get_current_screen();
+    if (!$screen || $screen->base !== 'post' || $screen->post_type !== 'product') {
+        return $init;
+    }
+    $existing = isset($init['content_style']) ? (string) $init['content_style'] : '';
+    $init['content_style'] = trim($existing . ' body,body#tinymce,body#tinymce.wp-editor{color:#65343C!important;}');
+    return $init;
+}, 20);
 
 /**
  * WooCommerce: Update header cart count via AJAX fragments.

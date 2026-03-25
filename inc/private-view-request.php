@@ -167,7 +167,7 @@ add_action('wp_footer', function () {
             <div class="ss-popup__content">
                 <h2 class="ss-popup__title" id="ssPrivateViewTitle"><?php echo esc_html__('Request Private View', 'stone-sparkle'); ?></h2>
                 <div class="ss-popup__body">
-                    <?php echo esc_html__('Book an in-store or virtual consultation with our private client team.', 'stone-sparkle'); ?>
+                    <?php echo esc_html__('Book a consultation with our private client team.', 'stone-sparkle'); ?>
                 </div>
 
                 <?php if ($feedback['result'] === 'success') : ?>
@@ -216,15 +216,7 @@ add_action('wp_footer', function () {
                             </select>
                         </div>
 
-                        <div class="ss-popup__field">
-                            <label for="ss_private_view_appointment_type"><?php echo esc_html__('Appointment type', 'stone-sparkle'); ?> *</label>
-                            <select id="ss_private_view_appointment_type" name="appointment_type" required>
-                                <option value="in-store"><?php echo esc_html__('In-store', 'stone-sparkle'); ?></option>
-                                <option value="virtual"><?php echo esc_html__('Virtual', 'stone-sparkle'); ?></option>
-                            </select>
-                        </div>
-
-                        <div class="ss-popup__field">
+                        <div class="ss-popup__field ss-popup__field--full">
                             <label for="ss_private_view_date_time"><?php echo esc_html__('Preferred date and time', 'stone-sparkle'); ?> *</label>
                             <input id="ss_private_view_date_time" type="datetime-local" name="preferred_datetime" required />
                         </div>
@@ -308,8 +300,14 @@ function ss_handle_private_view_request_submission() {
     $full_name          = isset($_POST['full_name']) ? sanitize_text_field(wp_unslash((string) $_POST['full_name'])) : '';
     $email              = isset($_POST['email']) ? sanitize_email(wp_unslash((string) $_POST['email'])) : '';
     $phone              = isset($_POST['phone']) ? sanitize_text_field(wp_unslash((string) $_POST['phone'])) : '';
-    $contact_method     = isset($_POST['contact_method']) ? sanitize_key(wp_unslash((string) $_POST['contact_method'])) : 'email';
-    $appointment_type   = isset($_POST['appointment_type']) ? sanitize_key(wp_unslash((string) $_POST['appointment_type'])) : 'in-store';
+    $contact_method = isset($_POST['contact_method']) ? sanitize_key(wp_unslash((string) $_POST['contact_method'])) : 'email';
+    $appointment_type = '';
+    if (isset($_POST['appointment_type'])) {
+        $candidate = sanitize_key(wp_unslash((string) $_POST['appointment_type']));
+        if (in_array($candidate, ['in-store', 'virtual'], true)) {
+            $appointment_type = $candidate;
+        }
+    }
     $preferred_datetime = isset($_POST['preferred_datetime']) ? sanitize_text_field(wp_unslash((string) $_POST['preferred_datetime'])) : '';
     $product_reference  = isset($_POST['product_reference']) ? sanitize_text_field(wp_unslash((string) $_POST['product_reference'])) : '';
     $message            = isset($_POST['message']) ? sanitize_textarea_field(wp_unslash((string) $_POST['message'])) : '';
@@ -330,9 +328,6 @@ function ss_handle_private_view_request_submission() {
     }
     if (!in_array($contact_method, ['email', 'phone', 'whatsapp'], true)) {
         $contact_method = 'email';
-    }
-    if (!in_array($appointment_type, ['in-store', 'virtual'], true)) {
-        $appointment_type = 'in-store';
     }
 
     if (!empty($errors)) {
@@ -380,13 +375,15 @@ function ss_handle_private_view_request_submission() {
         __('Email:', 'stone-sparkle') . ' ' . $email,
         __('Phone:', 'stone-sparkle') . ' ' . ($phone !== '' ? $phone : __('Not provided', 'stone-sparkle')),
         __('Preferred contact method:', 'stone-sparkle') . ' ' . ucfirst(str_replace('-', ' ', $contact_method)),
-        __('Appointment type:', 'stone-sparkle') . ' ' . ucfirst(str_replace('-', ' ', $appointment_type)),
-        __('Preferred date and time:', 'stone-sparkle') . ' ' . ss_private_view_format_datetime_for_human($preferred_datetime),
-        __('Product reference:', 'stone-sparkle') . ' ' . $product_reference,
-        __('Notes:', 'stone-sparkle') . ' ' . ($message !== '' ? $message : __('None', 'stone-sparkle')),
-        '',
-        __('Admin record:', 'stone-sparkle') . ' ' . admin_url('post.php?post=' . (int) $post_id . '&action=edit'),
     ];
+    if ($appointment_type !== '') {
+        $body_lines[] = __('Appointment type:', 'stone-sparkle') . ' ' . ucfirst(str_replace('-', ' ', $appointment_type));
+    }
+    $body_lines[] = __('Preferred date and time:', 'stone-sparkle') . ' ' . ss_private_view_format_datetime_for_human($preferred_datetime);
+    $body_lines[] = __('Product reference:', 'stone-sparkle') . ' ' . $product_reference;
+    $body_lines[] = __('Notes:', 'stone-sparkle') . ' ' . ($message !== '' ? $message : __('None', 'stone-sparkle'));
+    $body_lines[] = '';
+    $body_lines[] = __('Admin record:', 'stone-sparkle') . ' ' . admin_url('post.php?post=' . (int) $post_id . '&action=edit');
     wp_mail($admin_email, $subject, implode("\n", $body_lines));
 
     $success_url = add_query_arg('ss_pvr', 'success', $product_url);
@@ -400,7 +397,7 @@ add_filter('manage_' . SS_PRIVATE_VIEW_CPT . '_posts_columns', function ($column
         'title'       => __('Request', 'stone-sparkle'),
         'requester'   => __('Requester', 'stone-sparkle'),
         'product'     => __('Product', 'stone-sparkle'),
-        'appointment' => __('Appointment', 'stone-sparkle'),
+        'appointment' => __('Contact', 'stone-sparkle'),
         'pref_dt'     => __('Preferred date/time', 'stone-sparkle'),
         'notes'       => __('Message / notes', 'stone-sparkle'),
         'status'      => __('Status', 'stone-sparkle'),
@@ -444,13 +441,21 @@ add_action('manage_' . SS_PRIVATE_VIEW_CPT . '_posts_custom_column', function ($
     if ($column === 'appointment') {
         $appt = (string) get_post_meta($post_id, 'ss_pvr_appointment_type', true);
         $contact = (string) get_post_meta($post_id, 'ss_pvr_contact_method', true);
-        echo esc_html(ss_private_view_label_appointment_type($appt));
+        if ($appt !== '') {
+            echo esc_html(ss_private_view_label_appointment_type($appt));
+        }
         if ($contact !== '') {
-            echo '<br><span class="description">' . esc_html(sprintf(
+            if ($appt !== '') {
+                echo '<br>';
+            }
+            echo '<span class="description">' . esc_html(sprintf(
                 /* translators: %s: contact method label */
                 __('Via %s', 'stone-sparkle'),
                 ss_private_view_label_contact_method($contact)
             )) . '</span>';
+        }
+        if ($appt === '' && $contact === '') {
+            echo '<span aria-hidden="true">—</span>';
         }
         return;
     }
@@ -507,11 +512,6 @@ function ss_render_private_view_details_metabox($post) {
             'value' => $contact_raw !== '' ? ss_private_view_label_contact_method($contact_raw) : '',
         ],
         [
-            'key'   => 'appointment_type',
-            'label' => __('Appointment type', 'stone-sparkle'),
-            'value' => $appt_raw !== '' ? ss_private_view_label_appointment_type($appt_raw) : '',
-        ],
-        [
             'key'   => 'preferred_datetime',
             'label' => __('Preferred date and time', 'stone-sparkle'),
             'value' => ss_private_view_format_datetime_for_human((string) get_post_meta($post_id, 'ss_pvr_preferred_datetime', true)),
@@ -534,6 +534,16 @@ function ss_render_private_view_details_metabox($post) {
                 : __('No', 'stone-sparkle'),
         ],
     ];
+
+    if ($appt_raw !== '') {
+        array_splice($rows, 4, 0, [
+            [
+                'key'   => 'appointment_type',
+                'label' => __('Appointment type', 'stone-sparkle'),
+                'value' => ss_private_view_label_appointment_type($appt_raw),
+            ],
+        ]);
+    }
 
     echo '<table class="widefat striped ss-pvr-details" style="max-width:720px;">';
     foreach ($rows as $row) {
