@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+description: "Branch protection rules for the main branch"
+---
+
+# GitHub Branch Protection Rules for Main Branch
+
+This document outlines the branch protection rules to be applied to the main branch of the Stone-N-Sparkle-Theme repository.
+
+## Branch Protection Rule Settings
+
+### 1. Require pull request reviews before merging
+- **Enabled**: Yes  
+- **Description**: All changes must be reviewed through pull requests. This ensures that multiple eyes have examined the code changes before they are merged.
+  
+### 2. Dismiss stale pull request reviews when new commits are pushed
+- **Enabled**: Yes  
+- **Description**: If a new commit is pushed to a pull request, any existing reviews will be dismissed. This forces a re-evaluation of the changes and ensures that the review is based on the current state of the code.
+  
+### 3. Require status checks to pass before merging
+- **Enabled**: Yes  
+- **Description**: All status checks must pass before a pull request can be merged. This functionality helps ensure that the code is tested and verified by any required automated checks (CI/CD).
+  
+### 4. Require branches to be up to date before merging
+- **Enabled**: Yes  
+- **Description**: This allows merging only when the branch has the latest changes from the base branch, thereby avoiding integration issues.
+
+## Summary
+Apply these settings in the GitHub repository settings under the Branches section to enforce the outlined rules.
