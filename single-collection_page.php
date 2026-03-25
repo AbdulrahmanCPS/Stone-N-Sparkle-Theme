@@ -2,7 +2,8 @@
 /**
  * Template for single collection page.
  *
- * Layout: hero (title, content, featured image) → lookbook before → product grid (by pa_collection) → pagination → lookbook after.
+ * Layout: hero → lookbook before → product grid (by pa_collection) → pagination → lookbook after.
+ * If the first “before” lookbook image is landscape: lookbook banner first (under header), then hero, then any remaining lookbook slots.
  */
 
 defined('ABSPATH') || exit;
@@ -57,11 +58,39 @@ while (have_posts()) {
     }
     $lookbook_before = array_values(array_filter($lookbook_before, function ($i) { return !empty($i['url']); }));
     $lookbook_after  = array_values(array_filter($lookbook_after, function ($i) { return !empty($i['url']); }));
-?>
-<main id="primary" class="ss-main ss-collection-page" role="main">
 
+    $first_lookbook_url = !empty($lookbook_before[0]['url']) ? (string) $lookbook_before[0]['url'] : '';
+    $collection_landscape_lookbook_first = $first_lookbook_url !== ''
+        && function_exists('ss_collection_lookbook_url_is_landscape')
+        && ss_collection_lookbook_url_is_landscape($first_lookbook_url);
+?>
+<main id="primary" class="ss-main ss-collection-page<?php echo $collection_landscape_lookbook_first ? ' ss-collection-page--landscape-lookbook-first' : ''; ?>" role="main">
+
+  <?php
+  if ($collection_landscape_lookbook_first) {
+      $first_item = $lookbook_before[0];
+      $first_url  = $first_lookbook_url;
+      $first_alt  = isset($first_item['alt']) && (string) $first_item['alt'] !== '' ? $first_item['alt'] : __('Lookbook image', 'stone-sparkle');
+      ?>
+  <section class="ss-shop-lookbook ss-shop-lookbook--top ss-collection-lookbook-hero-section" aria-label="<?php esc_attr_e('Lookbook', 'stone-sparkle'); ?>">
+    <div class="ss-collection-lookbook-hero">
+      <div class="ss-lookbook-item ss-lookbook-item--shop ss-collection-lookbook-hero-item">
+        <div class="ss-lookbook-card">
+          <div class="ss-lookbook-media">
+            <img src="<?php echo esc_url($first_url); ?>" alt="<?php echo esc_attr($first_alt); ?>" loading="eager" decoding="async">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+      <?php
+  }
+  ?>
+
+  <?php if (!$collection_landscape_lookbook_first) : ?>
   <?php /* Hero: title, optional featured image, content/excerpt */ ?>
   <section class="ss-collection-hero ss-container" aria-label="<?php esc_attr_e('Collection', 'stone-sparkle'); ?>">
+    <?php /* Post title: visually hidden in main.css; visible heading lives in .ss-collection-content. */ ?>
     <h1 class="ss-collection-title entry-title"><?php the_title(); ?></h1>
     <?php if (has_post_thumbnail()) : ?>
       <div class="ss-collection-featured">
@@ -79,13 +108,64 @@ while (have_posts()) {
       </div>
     <?php endif; ?>
   </section>
+  <?php endif; ?>
+
+  <?php if ($collection_landscape_lookbook_first) : ?>
+  <section class="ss-collection-hero ss-container ss-collection-hero--below-landscape-lookbook" aria-label="<?php esc_attr_e('Collection', 'stone-sparkle'); ?>">
+    <?php /* Post title: visually hidden in main.css; visible heading lives in .ss-collection-content. */ ?>
+    <h1 class="ss-collection-title entry-title"><?php the_title(); ?></h1>
+    <?php if (has_post_thumbnail()) : ?>
+      <div class="ss-collection-featured">
+        <?php the_post_thumbnail('large', ['loading' => 'eager']); ?>
+      </div>
+    <?php endif; ?>
+    <?php if (has_excerpt()) : ?>
+      <div class="ss-collection-excerpt entry-summary">
+        <?php the_excerpt(); ?>
+      </div>
+    <?php endif; ?>
+    <?php if (trim(get_the_content()) !== '') : ?>
+      <div class="ss-collection-content entry-content">
+        <?php the_content(); ?>
+      </div>
+    <?php endif; ?>
+  </section>
+  <?php endif; ?>
 
   <?php /* Lookbook before products */ ?>
   <?php
   if (!empty($lookbook_before)) {
-      $n = min(count($lookbook_before), 3);
-      $grid_class = 'ss-lookbook-grid--' . $n;
-      ?>
+      if ($collection_landscape_lookbook_first) {
+          $remaining = array_slice($lookbook_before, 1);
+          if (!empty($remaining)) {
+              $n = min(count($remaining), 3);
+              $grid_class = 'ss-lookbook-grid--' . $n;
+              ?>
+  <section class="ss-shop-lookbook ss-shop-lookbook--top" aria-label="<?php esc_attr_e('Lookbook', 'stone-sparkle'); ?>">
+    <div class="ss-container ss-lookbook-grid <?php echo esc_attr($grid_class); ?>">
+      <?php foreach ($remaining as $item) :
+          $url = isset($item['url']) ? $item['url'] : '';
+          $alt = isset($item['alt']) && (string) $item['alt'] !== '' ? $item['alt'] : __('Lookbook image', 'stone-sparkle');
+          if ($url === '') {
+              continue;
+          }
+          ?>
+      <div class="ss-lookbook-item ss-lookbook-item--shop">
+        <div class="ss-lookbook-card">
+          <div class="ss-lookbook-media">
+            <img src="<?php echo esc_url($url); ?>" alt="<?php echo esc_attr($alt); ?>" loading="lazy" decoding="async">
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </section>
+              <?php
+          }
+      } else {
+          $n = min(count($lookbook_before), 3);
+          $grid_class = 'ss-lookbook-grid--' . $n;
+          ?>
   <section class="ss-shop-lookbook ss-shop-lookbook--top" aria-label="<?php esc_attr_e('Lookbook', 'stone-sparkle'); ?>">
     <div class="ss-container ss-lookbook-grid <?php echo esc_attr($grid_class); ?>">
       <?php foreach ($lookbook_before as $item) :
@@ -105,7 +185,10 @@ while (have_posts()) {
       <?php endforeach; ?>
     </div>
   </section>
-  <?php } ?>
+          <?php
+      }
+  }
+  ?>
 
   <?php /* Product grid: WP_Query by pa_collection, with pagination */ ?>
   <section class="ss-shop-products" aria-label="<?php esc_attr_e('Products', 'stone-sparkle'); ?>">
