@@ -253,6 +253,7 @@ if (!function_exists('ss_render_you_may_also_like_section')) {
 
         // Wrap in `.woocommerce` so the theme's existing `ul.products` grid styles apply here too.
         echo '    <div class="woocommerce ss-you-may-also-like__woocommerce-loop">';
+        echo '      <div class="ss-you-may-also-like__strip">';
         do_action('woocommerce_before_shop_loop');
         woocommerce_product_loop_start();
 
@@ -288,6 +289,7 @@ if (!function_exists('ss_render_you_may_also_like_section')) {
         woocommerce_product_loop_end();
         do_action('woocommerce_after_shop_loop');
 
+        echo '      </div>';
         echo '    </div>';
         echo '  </div>';
         echo '</section>';
