@@ -1,0 +1,26 @@
+# Parallel Development Workflow
+
+## Overview
+In this workflow, two developers work alongside Cursor AI agents, utilizing vibe-coding mode to enhance productivity and maintainality. The focus is on seamless collaboration while enforcing automatic rulesets on the main branch.
+
+## Roles
+- **Developer 1**: Responsible for feature X development.
+- **Developer 2**: Focused on bug fixes and improvements.
+- **Cursor AI Agents**: Assist with automated code reviews and compliance checks.
+
+## Workflow Steps
+1. **Branch Creation**: Each developer creates a feature branch off the main branch.
+2. **Vibe-Coding Mode**: Developers initiate vibe-coding sessions where Cursor AI agents assist, ensuring code quality and fostering creativity.
+3. **Coding & Collaboration**: Continuous communication between developers and Cursor AI to address issues and improve code.
+4. **Pull Request Creation**: Once their tasks are completed, developers must create a pull request against the main branch, which will be monitored by the Cursor AI for rule violations.
+5. **Automatic Ruleset Enforcement**: Before merging, the Cursor AI will check for adherence to the coding standards and practices designated in the ruleset.
+6. **Merging**: Upon passing the checks, the pull request is merged back to the main branch.
+
+## Ruleset
+- Code must be peer-reviewed.
+- Follow defined coding styles and conventions.
+- Automated tests must pass before merging.
+- All security checks must be validated.
+
+## Conclusion
+By leveraging vibe-coding and automated ruleset enforcement, development teams can work efficiently and ensure high-quality code merges that align with project goals.
