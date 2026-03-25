@@ -238,6 +238,57 @@ add_filter('woocommerce_currency_symbol', function ($symbol, $currency) {
     return $symbol;
 }, 10, 2);
 
+/**
+ * Classic checkout: wrap order-review table for two-column + sticky summary (block-style layout).
+ * Opens before @see woocommerce_order_review (10), closes before @see woocommerce_checkout_payment (20).
+ */
+add_action('woocommerce_checkout_order_review', function () {
+    if (!function_exists('is_checkout') || !is_checkout() || (function_exists('is_order_received_page') && is_order_received_page())) {
+        return;
+    }
+    echo '<div class="ss-checkout-sidebar-inner">';
+    echo '<p class="ss-checkout-order-summary-title">' . esc_html__('Order summary', 'stone-sparkle') . '</p>';
+}, 5);
+
+add_action('woocommerce_checkout_order_review', function () {
+    if (!function_exists('is_checkout') || !is_checkout() || (function_exists('is_order_received_page') && is_order_received_page())) {
+        return;
+    }
+    echo '</div>';
+}, 15);
+
+/**
+ * Classic checkout: line-item thumbnail + qty badge (reference layout); hide default × qty text.
+ */
+add_filter('woocommerce_cart_item_name', function ($product_name, $cart_item, $cart_item_key) {
+    if (!function_exists('is_checkout') || !is_checkout() || (function_exists('is_order_received_page') && is_order_received_page())) {
+        return $product_name;
+    }
+    if (empty($cart_item['data']) || !is_object($cart_item['data'])) {
+        return $product_name;
+    }
+    $product     = $cart_item['data'];
+    $qty         = isset($cart_item['quantity']) ? (int) $cart_item['quantity'] : 0;
+    $thumb_html  = $product->get_image('woocommerce_gallery_thumbnail', ['class' => 'ss-checkout-line__img']);
+    $badge       = '<span class="ss-checkout-line__qty" aria-hidden="true">' . esc_html((string) $qty) . '</span>';
+    $thumb_wrap  = '<span class="ss-checkout-line__thumb">' . $thumb_html . $badge . '</span>';
+    return '<span class="ss-checkout-line">' . $thumb_wrap . '<span class="ss-checkout-line__meta">' . $product_name . '</span></span>';
+}, 20, 3);
+
+add_filter('woocommerce_checkout_cart_item_quantity', function ($html, $cart_item, $cart_item_key) {
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return $html;
+    }
+    return '';
+}, 10, 3);
+
+add_action('woocommerce_review_order_before_submit', function () {
+    if (!function_exists('wc_get_cart_url')) {
+        return;
+    }
+    echo '<a class="ss-checkout-return__link" href="' . esc_url(wc_get_cart_url()) . '">' . esc_html__('← Return to cart', 'stone-sparkle') . '</a>';
+}, 5);
+
 add_action('template_redirect', function () {
     if (!function_exists('is_account_page') || !is_account_page()) {
         return;
