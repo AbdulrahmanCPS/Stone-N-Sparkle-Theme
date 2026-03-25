@@ -43,8 +43,7 @@ if (!$footer_enabled) {
     return;
 }
 
-// Section toggles + titles
-// Section toggles + titles
+// Section toggles + titles (contact rendered after “Follow Us” for column order)
 $sections = [
     'product' => [
         'enabled'   => (bool) ss_footer_get_field('footer_product_enabled', 1),
@@ -64,12 +63,12 @@ $sections = [
         'links_key' => 'footer_support_links',
         'menu'      => 'footer_support_menu',
     ],
-    'contact' => [
-        'enabled'   => (bool) ss_footer_get_field('footer_contact_enabled', 1),
-        'title'     => (string) ss_footer_get_field('footer_contact_title', 'Contact'),
-        'links_key' => 'footer_contact_links',
-        'menu'      => 'footer_contact_menu',
-    ],
+];
+
+$contact_cfg = [
+    'enabled' => (bool) ss_footer_get_field('footer_contact_enabled', 1),
+    'title'   => (string) ss_footer_get_field('footer_contact_title', 'Contact'),
+    'menu'    => 'footer_contact_menu',
 ];
 
 $social_enabled = (bool) ss_footer_get_field('footer_social_enabled', 1);
@@ -89,28 +88,6 @@ $copyright_text    = str_replace(
 
     <div class="ss-footer-inner ss-footer-grid">
 
-<!-- Brand / description (ACF) -->
-<?php
-  $brand_enabled = (bool) ss_footer_get_field('footer_brand_enabled', 1);
-  $brand_title   = (string) ss_footer_get_field('footer_brand_title', 'STONE AND SPARKLE');
-  $brand_desc    = (string) ss_footer_get_field('footer_brand_description', '');
-  
-?>
-<?php if ($brand_enabled): ?>
-  <div class="ss-footer-col ss-footer-brand">
-    <h4><?php echo esc_html($brand_title); ?></h4>
-
-    <?php if (trim($brand_desc) !== ''): ?>
-      <div class="ss-footer-links">
-        <span><?php echo esc_html($brand_desc); ?></span>
-      </div>
-    <?php endif; ?>
-
-    <?php ss_footer_render_link_slots('brand', 8); ?>
-  </div>
-<?php endif; ?>
-
-      
 <?php foreach ($sections as $key => $cfg): ?>
   <?php if (!$cfg['enabled']) { continue; } ?>
   <div class="ss-footer-col ss-footer-section ss-footer-<?php echo esc_attr($key); ?>">
@@ -125,8 +102,6 @@ $copyright_text    = str_replace(
             $rendered = ss_footer_render_link_slots('about', 8);
         } elseif ($key === 'support') {
             $rendered = ss_footer_render_link_slots('support', 8);
-        } elseif ($key === 'contact') {
-            $rendered = ss_footer_render_link_slots('contact', 8);
         }
 
         if (!$rendered) {
@@ -254,6 +229,26 @@ $copyright_text    = str_replace(
           </div>
         </div>
       <?php endif; ?>
+
+<?php if ($contact_cfg['enabled']) : ?>
+  <div class="ss-footer-col ss-footer-section ss-footer-contact">
+    <h4><?php echo esc_html($contact_cfg['title']); ?></h4>
+    <div class="ss-footer-links">
+      <?php
+        $rendered_contact = ss_footer_render_link_slots('contact', 8);
+        if (!$rendered_contact && !empty($contact_cfg['menu']) && has_nav_menu($contact_cfg['menu'])) {
+            wp_nav_menu(array(
+                'theme_location' => $contact_cfg['menu'],
+                'container'      => false,
+                'menu_class'     => 'ss-footer-menu',
+                'fallback_cb'    => '__return_empty_string',
+                'depth'          => 1,
+            ));
+        }
+      ?>
+    </div>
+  </div>
+<?php endif; ?>
 
     </div>
 

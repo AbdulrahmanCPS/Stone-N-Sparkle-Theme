@@ -270,6 +270,34 @@ function ss_get_collection_lookbook($post_id, $key) {
 }
 
 /**
+ * Whether a lookbook image URL is landscape (attachment width >= height).
+ * Returns false if the URL is not a resolvable local attachment (external/CDN → portrait layout).
+ *
+ * @param string $url Image URL.
+ * @return bool
+ */
+function ss_collection_lookbook_url_is_landscape($url) {
+    $url = trim((string) $url);
+    if ($url === '') {
+        return false;
+    }
+    $attachment_id = attachment_url_to_postid($url);
+    if ($attachment_id <= 0) {
+        return false;
+    }
+    $meta = wp_get_attachment_metadata($attachment_id);
+    if (!is_array($meta) || empty($meta['width']) || empty($meta['height'])) {
+        return false;
+    }
+    $w = (int) $meta['width'];
+    $h = (int) $meta['height'];
+    if ($w <= 0 || $h <= 0) {
+        return false;
+    }
+    return $w >= $h;
+}
+
+/**
  * Render one lookbook image slot (for meta box list or template).
  *
  * @param string $list_key 'before' or 'after'.
