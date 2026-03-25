@@ -76,9 +76,9 @@
 	"location": [
 		[
 			{
-				"param": "options_page",
+				"param": "page_template",
 				"operator": "==",
-				"value": "ss-uae-emirate-shipping"
+				"value": "page-uae-shipping-settings.php"
 			}
 		]
 	],
@@ -89,5 +89,5 @@
 	"instruction_placement": "label",
 	"active": true,
 	"description": "",
-	"modified": 1742918400
+	"modified": 1743000000
 }

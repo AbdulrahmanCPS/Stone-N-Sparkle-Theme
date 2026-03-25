@@ -2,6 +2,8 @@
 /**
  * UAE emirate checkout fields: sync to billing/shipping city, ACF shipping prices, classic checkout only.
  *
+ * ACF Free: shipping amounts are stored on a private page (see page-uae-shipping-settings.php), not Options.
+ *
  * @package Stone_Sparkle
  */
 
@@ -9,8 +11,11 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-/** Menu slug for ACF location + options context (must match acf-json). */
-const SS_UAE_SHIPPING_OPTIONS_SLUG = 'ss-uae-emirate-shipping';
+/** WooCommerce admin submenu slug (redirects to the settings page editor). */
+const SS_UAE_SHIPPING_MENU_SLUG = 'ss-uae-emirate-shipping';
+
+/** Page slug for ACF-backed UAE prices (ACF Free: data stored on the page, not options). Must match acf-json page_template rule. */
+const SS_UAE_SETTINGS_PAGE_SLUG = 'uae-emirate-shipping';
 
 /**
  * Canonical emirate keys (normalized slug => label + ACF option field name).
@@ -98,6 +103,102 @@ function ss_uae_acf_field_from_city_label($city_label) {
 }
 
 /**
+ * Post ID of the private “UAE shipping” settings page, or 0.
+ *
+ * @return int
+ */
+function ss_uae_settings_page_id() {
+	$page = get_page_by_path(SS_UAE_SETTINGS_PAGE_SLUG, OBJECT, 'page');
+	return ($page && !is_wp_error($page)) ? (int) $page->ID : 0;
+}
+
+/**
+ * Create the settings page once (theme activation or first privileged admin load).
+ *
+ * ACF Free has no Options UI; fields attach to this page via template location in acf-json.
+ *
+ * @return void
+ */
+function ss_uae_ensure_settings_page() {
+	if (ss_uae_settings_page_id() > 0) {
+		return;
+	}
+	$filter = current_filter();
+	if ('after_switch_theme' !== $filter && !current_user_can('manage_woocommerce')) {
+		return;
+	}
+	$post_id = wp_insert_post(
+		array(
+			'post_title'   => __('UAE emirate shipping', 'stone-sparkle'),
+			'post_name'    => SS_UAE_SETTINGS_PAGE_SLUG,
+			'post_status'  => 'private',
+			'post_type'    => 'page',
+			'post_content' => '<!-- UAE shipping settings (theme). Do not delete this page. -->',
+		),
+		true
+	);
+	if (is_wp_error($post_id) || !is_numeric($post_id)) {
+		return;
+	}
+	update_post_meta((int) $post_id, '_wp_page_template', 'page-uae-shipping-settings.php');
+}
+
+add_action('after_switch_theme', 'ss_uae_ensure_settings_page');
+add_action('admin_init', 'ss_uae_ensure_settings_page', 0);
+
+/**
+ * Read an emirate price field from the settings page (not options — ACF Free compatible).
+ *
+ * @param string $field_name ACF field name (e.g. dubai_shipping_price).
+ * @return mixed|null
+ */
+function ss_uae_get_price_field($field_name) {
+	if (!function_exists('get_field')) {
+		return null;
+	}
+	$pid = ss_uae_settings_page_id();
+	if ($pid <= 0) {
+		return null;
+	}
+	return get_field((string) $field_name, $pid);
+}
+
+/**
+ * WooCommerce → UAE shipping: create settings page if needed, then open the page editor (ACF fields).
+ *
+ * @return void
+ */
+function ss_uae_wc_submenu_render() {
+	ss_uae_ensure_settings_page();
+	$pid = ss_uae_settings_page_id();
+	if ($pid > 0) {
+		wp_safe_redirect(admin_url('post.php?post=' . $pid . '&action=edit'));
+		exit;
+	}
+	wp_die(
+		esc_html__('Unable to create the UAE shipping settings page. Please try again or contact the site administrator.', 'stone-sparkle'),
+		esc_html__('UAE shipping', 'stone-sparkle'),
+		array('response' => 500)
+	);
+}
+
+/**
+ * @return void
+ */
+function ss_uae_register_wc_admin_menu() {
+	add_submenu_page(
+		'woocommerce',
+		__('UAE emirate shipping', 'stone-sparkle'),
+		__('UAE shipping', 'stone-sparkle'),
+		'manage_woocommerce',
+		SS_UAE_SHIPPING_MENU_SLUG,
+		'ss_uae_wc_submenu_render'
+	);
+}
+
+add_action('admin_menu', 'ss_uae_register_wc_admin_menu', 99);
+
+/**
  * Merge WooCommerce checkout post_data with top-level POST (update_order_review + normal submit).
  *
  * @return array<string, mixed>
@@ -154,39 +255,6 @@ function ss_uae_patch_abbreviated_checkout_post(array $data) {
 		}
 	}
 }
-
-/**
- * ACF: WooCommerce submenu for UAE prices (field definitions load from acf-json).
- *
- * @return void
- */
-function ss_uae_register_acf_options_and_fields() {
-	$slug = SS_UAE_SHIPPING_OPTIONS_SLUG;
-
-	if (function_exists('acf_add_options_sub_page')) {
-		acf_add_options_sub_page(
-			array(
-				'page_title'  => __('UAE emirate shipping', 'stone-sparkle'),
-				'menu_title'  => __('UAE shipping', 'stone-sparkle'),
-				'menu_slug'   => $slug,
-				'parent_slug' => 'woocommerce',
-				'capability'  => 'manage_woocommerce',
-			)
-		);
-	} elseif (function_exists('acf_add_options_page')) {
-		acf_add_options_page(
-			array(
-				'page_title'  => __('UAE emirate shipping', 'stone-sparkle'),
-				'menu_title'  => __('UAE shipping', 'stone-sparkle'),
-				'menu_slug'   => $slug,
-				'capability'  => 'manage_woocommerce',
-				'parent_slug' => 'woocommerce',
-			)
-		);
-	}
-}
-
-add_action('acf/init', 'ss_uae_register_acf_options_and_fields');
 
 /**
  * @return bool
@@ -426,10 +494,10 @@ function ss_uae_package_rates( $rates, $package ) {
 	}
 	$city = isset($package['destination']['city']) ? trim((string) $package['destination']['city']) : '';
 	$acf_field = ss_uae_acf_field_from_city_label($city);
-	if ($acf_field === '' || !function_exists('get_field')) {
+	if ($acf_field === '') {
 		return $rates;
 	}
-	$price_raw = get_field($acf_field, 'option');
+	$price_raw = ss_uae_get_price_field($acf_field);
 	if ($price_raw === null || $price_raw === '' || !is_numeric($price_raw)) {
 		return $rates;
 	}
