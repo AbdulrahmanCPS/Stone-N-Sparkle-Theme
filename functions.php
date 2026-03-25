@@ -9,6 +9,7 @@ define('SS_THEME_VERSION', '0.2.1');
 
 require_once get_template_directory() . '/inc/search-overlay.php';
 require_once get_template_directory() . '/inc/search-results-query.php';
+require_once get_template_directory() . '/inc/you-may-also-like.php';
 
 /**
  * WooCommerce: Header cart link (with live-updating count badge)
