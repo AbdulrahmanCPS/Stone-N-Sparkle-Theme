@@ -1,0 +1,24 @@
+# GitHub Branch Ruleset Configuration for Protecting Main Branch
+
+rules:
+  - name: Require pull request reviews before merging
+    enabled: true
+    options:
+      requireCodeOwnerReviews: true
+      dismissalRestrictions:
+        users: []
+        teams: []
+  - name: Require status checks to pass before merging
+    enabled: true
+    options:
+      strict: true
+      contexts:
+        - ci-tests
+        - linting
+  - name: Restrict who can push to matching branches
+    enabled: true
+    options:
+      users:
+        - YourGitHubUsername
+      teams:
+        - YourTeamName
