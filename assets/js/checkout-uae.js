@@ -31,6 +31,19 @@
 		}
 	}
 
+	function forceSelect2Width(selectSel) {
+		var $select = $(selectSel);
+		if (!$select.length) return;
+		var $container = $select.next('.select2');
+		if ($container.length) {
+			$container.css({ width: '100%', maxWidth: '100%' });
+		}
+		var s2 = $select.data('select2');
+		if (s2 && s2.$container) {
+			s2.$container.css({ width: '100%', maxWidth: '100%' });
+		}
+	}
+
 	function syncSameAsBilling() {
 		if (shipToDifferent()) {
 			return;
@@ -53,6 +66,7 @@
 		if ($be.length) {
 			if (country === AE) {
 				$be.show();
+				forceSelect2Width('#billing_emirate');
 				syncSelectLabelToCity('#billing_emirate', '#billing_city');
 			} else {
 				$be.hide();
@@ -92,6 +106,7 @@
 		if ($se.length) {
 			if (sc === AE) {
 				$se.show();
+				forceSelect2Width('#shipping_emirate');
 				syncSelectLabelToCity('#shipping_emirate', '#shipping_city');
 			} else {
 				$se.hide();

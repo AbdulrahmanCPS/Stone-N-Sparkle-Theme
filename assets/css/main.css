@@ -1310,6 +1310,23 @@ body.woocommerce-checkout form.checkout .form-row{
   margin: 0 0 16px;
   padding: 0;
 }
+/* Keep shipping emirate/city rows as full-width fields (match billing comfort). */
+body.woocommerce-checkout form.checkout #shipping_emirate_field,
+body.woocommerce-checkout form.checkout #shipping_city_field{
+  float: none !important;
+  clear: both;
+  width: 100% !important;
+  max-width: 100%;
+}
+/* Select2 can initialize at tiny width when field starts hidden; force full width. */
+body.woocommerce-checkout form.checkout #shipping_emirate_field .select2-container,
+body.woocommerce-checkout form.checkout #billing_emirate_field .select2-container{
+  width: 100% !important;
+  max-width: 100% !important;
+}
+body.woocommerce-checkout .select2-container--open .select2-dropdown{
+  min-width: 260px;
+}
 body.woocommerce-checkout form.checkout .form-row label{
   display: block;
   margin: 0 0 6px;
