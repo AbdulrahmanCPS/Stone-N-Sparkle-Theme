@@ -1712,7 +1712,7 @@ require_once get_template_directory() . '/inc/private-view-request.php';
 require_once get_template_directory() . '/inc/woocommerce-uae-checkout-shipping.php';
 
 /**
- * Variable product: output "Clear" after the variation price block, not inside the last attribute cell.
+ * Variable product: output "Clear" beside the variation price row.
  *
  * @return void
  */

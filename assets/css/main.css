@@ -3289,7 +3289,7 @@ body.single-product .woocommerce div.product,
 .single-product .woocommerce div.product{
   width:min(var(--ss-max), calc(100% - 48px));
   margin: 0 auto;
-  padding: 6rem 0 5.5rem !important;
+  padding: 5rem 0 4.75rem !important;
 }
 
 .single-product .woocommerce div.product::after{ content:""; display:block; clear:both; }
@@ -3519,7 +3519,7 @@ body.single-product .woocommerce form.variations_form,
 }
 body.single-product .woocommerce .variations,
 .single-product .variations{
-  margin: 0 0 16px !important;
+  margin: 0 0 10px !important;
   padding: 0 !important;
   width: 100% !important;
   max-width: min(560px, 100%);
@@ -3533,7 +3533,7 @@ body.single-product .woocommerce .variations tbody,
   display: grid !important;
   grid-template-columns: max-content max-content;
   column-gap: 8px;
-  row-gap: 12px;
+  row-gap: 10px;
   align-items: center;
   justify-items: start;
   width: max-content;
@@ -3573,7 +3573,7 @@ body.single-product .woocommerce .variations th.label,
 .single-product .variations th.label{
   justify-self: start;
   align-self: center;
-  min-height: 0;
+  min-height: var(--ss-pill-h);
   display: flex !important;
   align-items: center;
   justify-content: flex-start;
@@ -3653,15 +3653,29 @@ body.single-product .woocommerce .variations th.value,
   position: relative;
   min-width: 0;
   width: auto;
+  min-height: var(--ss-pill-h);
   max-width: 100%;
   display: flex !important;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
   gap: 8px;
   padding-left: 0 !important;
   margin-left: 0 !important;
   overflow: visible;
+}
+/* Keep selector + Clear in one tidy row; selector can shrink with ellipsis when needed. */
+.single-product .variations .value .ss-variation-select,
+body.single-product .woocommerce .variations .value .ss-variation-select{
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(100%, 300px);
+}
+.single-product .variations .value select:not(.ss-variation-select__native),
+body.single-product .woocommerce .variations .value select:not(.ss-variation-select__native){
+  flex: 0 1 auto;
+  min-width: 0 !important;
+  max-width: min(100%, 300px) !important;
 }
 /* Variation price: centered within row; layout with Clear uses .single_variation_wrap flex rules below */
 .single-product .woocommerce-variation-price .price,
@@ -3716,8 +3730,18 @@ body.single-product .woocommerce .variations .value select:not(.ss-variation-sel
 body.single-product .woocommerce .variations select:not(.ss-variation-select__native):disabled,
 .single-product .variations .value select:not(.ss-variation-select__native):disabled,
 .single-product .variations select:not(.ss-variation-select__native):disabled{ opacity: 0.65 !important; cursor: not-allowed !important; }
+/* Manual controls: tweak Clear-link layout in one place */
+.single-product{
+  /* use `auto` to pin Clear to right, or `0` to keep it beside selector text */
+  --ss-clear-margin-left: auto;
+  --ss-clear-padding-left: 8px;
+  --ss-clear-display: inline-flex;
+}
+
 .single-product .reset_variations{
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  height: auto;
   margin: 0;
   font-family: var(--ss-pill-font);
   font-size: 12px;
@@ -3730,6 +3754,24 @@ body.single-product .woocommerce .variations select:not(.ss-variation-select__na
 .single-product div.summary .reset_variations{
   margin-left: 0;
   margin-right: 0;
+}
+/* Keep "Clear" on the right of the selector for quick compare. */
+.single-product .variations .value .reset_variations{
+  flex: 0 0 auto;
+  margin-left: var(--ss-clear-margin-left);
+  padding-left: var(--ss-clear-padding-left);
+  margin-top: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+/* Show Clear only when Woo marks it visible after a real selection path. */
+.single-product .variations .value .reset_variations[style*="visibility: hidden"],
+body.single-product .woocommerce .variations .value .reset_variations[style*="visibility: hidden"]{
+  display: none !important;
+}
+.single-product .variations .value .reset_variations[style*="visibility: visible"],
+body.single-product .woocommerce .variations .value .reset_variations[style*="visibility: visible"]{
+  display: var(--ss-clear-display) !important;
 }
 .single-product .reset_variations:hover{ color: var(--ss-wine); }
 .single-product .reset_variations:focus-visible{ outline: 2px solid var(--ss-rose); outline-offset: 2px; }
@@ -3923,15 +3965,15 @@ body.single-product .woocommerce .variations select:not(.ss-variation-select__na
   }
 }
 
-/* Variable product: variation price + Clear on one tidy row; qty/cart full width below */
+/* Variable product: fixed Clear position beside variation price, cart row below */
 .single-product .single_variation_wrap{
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  column-gap: 16px;
-  row-gap: 12px;
+  row-gap: 8px;
+  column-gap: 10px;
   width: 100%;
   margin-top: 6px;
 }
@@ -3939,66 +3981,67 @@ body.single-product .woocommerce .variations select:not(.ss-variation-select__na
   display: contents;
 }
 .single-product .single_variation_wrap .woocommerce-variation-description{
-  flex: 1 0 100%;
   order: 1;
   width: 100%;
   text-align: center;
 }
-.single-product .single_variation_wrap .ss-pdp-variation-price-row{
-  flex: 1 1 auto;
+.single-product .single_variation_wrap .ss-pdp-variation-actions{
   order: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin: 0;
+}
+.single-product .single_variation_wrap .ss-pdp-variation-actions:empty{
+  display: none;
+  min-height: 0;
+}
+.single-product .single_variation_wrap .ss-pdp-variation-actions .reset_variations{
+  margin: 0;
+  padding-right: 8px;
+  white-space: nowrap;
+}
+.single-product .single_variation_wrap .ss-pdp-variation-price-row{
+  order: 3;
+  min-height: 30px;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-width: 0;
-  max-width: 100%;
 }
 .single-product .single_variation_wrap .ss-pdp-variation-price-row .woocommerce-variation-price{
   margin: 0;
 }
-.single-product .single_variation_wrap .ss-pdp-variation-actions{
-  flex: 0 0 auto;
-  order: 2;
+/* If wrapper class isn't present, style Woo's native variation price similarly. */
+.single-product .single_variation_wrap .woocommerce-variation-price{
+  order: 3;
+  min-height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
 }
-.single-product .single_variation_wrap .ss-pdp-variation-actions .reset_variations{
-  margin: 0;
-  white-space: nowrap;
+/* Only show Clear after Woo marks it visible. */
+.single-product .single_variation_wrap .ss-pdp-variation-actions .reset_variations[style*="visibility: hidden"]{
+  display: none !important;
+}
+.single-product .single_variation_wrap .ss-pdp-variation-actions .reset_variations[style*="visibility: visible"]{
+  display: inline-flex !important;
 }
 .single-product .single_variation_wrap .woocommerce-variation-availability{
-  flex: 1 0 100%;
-  order: 3;
+  order: 4;
   width: 100%;
   text-align: center;
 }
 .single-product .single_variation_wrap .woocommerce-variation-add-to-cart,
 .single-product .single_variation_wrap .variations_button{
-  flex: 1 0 100%;
-  order: 4;
+  order: 5;
   width: 100%;
 }
 @media (max-width: 480px){
   .single-product .single_variation_wrap{
-    column-gap: 10px;
-    row-gap: 10px;
-  }
-  .single-product .single_variation_wrap .ss-pdp-variation-price-row{
-    flex: 1 0 100%;
-    order: 2;
-  }
-  .single-product .single_variation_wrap .ss-pdp-variation-actions{
-    flex: 1 0 100%;
-    order: 3;
-  }
-  .single-product .single_variation_wrap .woocommerce-variation-availability{
-    order: 4;
-  }
-  .single-product .single_variation_wrap .woocommerce-variation-add-to-cart,
-  .single-product .single_variation_wrap .variations_button{
-    order: 5;
+    row-gap: 8px;
+    column-gap: 8px;
+    margin-top: 4px;
   }
 }
 

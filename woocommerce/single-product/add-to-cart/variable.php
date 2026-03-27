@@ -57,7 +57,7 @@ do_action('woocommerce_before_add_to_cart_form'); ?>
 			 * Hook: woocommerce_single_variation.
 			 *
 			 * @hooked woocommerce_single_variation - 10 Empty div for variation data.
-			 * @hooked ss_output_variations_reset_link - 15 Clear link (theme; beside variation price row).
+			 * @hooked ss_output_variations_reset_link - 15 Clear link (theme; left of variation price).
 			 * @hooked woocommerce_single_variation_add_to_cart_button - 20 Qty and cart button.
 			 */
 			do_action('woocommerce_single_variation');
