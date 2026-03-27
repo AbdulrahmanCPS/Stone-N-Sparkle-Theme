@@ -102,7 +102,7 @@ function ss_uae_sanitize_state_for_uae($state) {
 	if ($state === '') {
 		return '';
 	}
-	$compact = strtoupper((string) preg_replace('/[^A-Z]/', '', $state));
+	$compact = (string) preg_replace('/[^A-Z]/', '', strtoupper($state));
 	if ($compact !== '' && strpos($compact, 'AE') === 0 && strlen($compact) > 2) {
 		return '';
 	}
