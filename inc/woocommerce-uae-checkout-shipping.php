@@ -82,20 +82,23 @@ function ss_uae_label_from_slug($raw) {
 }
 
 /**
- * ACF option field name for a canonical city label (case-insensitive).
+ * ACF field name from city/emirate string.
  *
- * @param string $city_label City / emirate label.
+ * Accepts either display labels ("Ras Al Khaimah") or stored select values
+ * ("ras al khaimah", "ras-al-khaimah", "ras_al_khaimah").
+ *
+ * @param string $city_label City / emirate label or value.
  * @return string Field name or empty.
  */
 function ss_uae_acf_field_from_city_label($city_label) {
-	$city_label = trim((string) $city_label);
-	if ($city_label === '') {
+	$needle = ss_uae_normalize_emirate_slug($city_label);
+	if ($needle === '') {
 		return '';
 	}
-	$needle = function_exists('mb_strtolower') ? mb_strtolower($city_label, 'UTF-8') : strtolower($city_label);
-	foreach (ss_uae_emirate_definitions() as $def) {
-		$lbl    = function_exists('mb_strtolower') ? mb_strtolower($def['label'], 'UTF-8') : strtolower($def['label']);
-		if ($lbl === $needle) {
+	foreach (ss_uae_emirate_definitions() as $slug => $def) {
+		$label_norm = ss_uae_normalize_emirate_slug($def['label']);
+		$slug_norm  = ss_uae_normalize_emirate_slug($slug);
+		if ($needle === $label_norm || $needle === $slug_norm) {
 			return $def['acf'];
 		}
 	}
@@ -229,11 +232,14 @@ function ss_uae_get_merged_checkout_request() {
  * @return void
  */
 function ss_uae_patch_abbreviated_checkout_post(array $data) {
+	$has_uae_destination = false;
+
 	if (($data['billing_country'] ?? '') === 'AE' && !empty($data['billing_emirate'])) {
 		$label = ss_uae_label_from_slug($data['billing_emirate']);
 		if ($label !== '') {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- WC checkout/AJAX; nonce verified by WC.
 			$_POST['city'] = $label;
+			$has_uae_destination = true;
 		}
 	}
 	$ship_diff = !empty($data['ship_to_different_address']);
@@ -243,7 +249,13 @@ function ss_uae_patch_abbreviated_checkout_post(array $data) {
 			if ($label !== '') {
 				// phpcs:ignore WordPress.Security.NonceVerification.Missing
 				$_POST['s_city'] = $label;
+				$has_uae_destination = true;
 			}
+		}
+		if ($has_uae_destination) {
+			// Allow shipping calculation as soon as AE + emirate is chosen.
+			// WC otherwise may keep "Enter your address to view shipping options."
+			$_POST['has_full_address'] = '1';
 		}
 		return;
 	}
@@ -252,7 +264,12 @@ function ss_uae_patch_abbreviated_checkout_post(array $data) {
 		if ($label !== '') {
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing
 			$_POST['s_city'] = $label;
+			$has_uae_destination = true;
 		}
+	}
+
+	if ($has_uae_destination) {
+		$_POST['has_full_address'] = '1';
 	}
 }
 
@@ -495,10 +512,22 @@ function ss_uae_package_rates( $rates, $package ) {
 	$city = isset($package['destination']['city']) ? trim((string) $package['destination']['city']) : '';
 	$acf_field = ss_uae_acf_field_from_city_label($city);
 	if ($acf_field === '') {
+		if (function_exists('wc_get_logger')) {
+			wc_get_logger()->debug(
+				'UAE shipping: no emirate match for destination city "' . $city . '"',
+				array('source' => 'ss-uae-shipping')
+			);
+		}
 		return $rates;
 	}
 	$price_raw = ss_uae_get_price_field($acf_field);
 	if ($price_raw === null || $price_raw === '' || !is_numeric($price_raw)) {
+		if (function_exists('wc_get_logger')) {
+			wc_get_logger()->debug(
+				'UAE shipping: no numeric ACF price for field "' . $acf_field . '"',
+				array('source' => 'ss-uae-shipping')
+			);
+		}
 		return $rates;
 	}
 	$price = (float) $price_raw;
@@ -514,7 +543,89 @@ function ss_uae_package_rates( $rates, $package ) {
 		}
 		$rate->set_cost((string) wc_format_decimal($price));
 	}
+	if (function_exists('wc_get_logger')) {
+		wc_get_logger()->debug(
+			'UAE shipping: applied price ' . wc_format_decimal($price) . ' for city "' . $city . '" using field "' . $acf_field . '"',
+			array('source' => 'ss-uae-shipping')
+		);
+	}
 	return $rates;
 }
 
 add_filter('woocommerce_package_rates', 'ss_uae_package_rates', 50, 2);
+
+/**
+ * Resolve canonical emirate label from a city/emirate value.
+ *
+ * @param string $city City string from checkout destination.
+ * @return string
+ */
+function ss_uae_emirate_label_from_city($city) {
+	$needle = ss_uae_normalize_emirate_slug($city);
+	if ($needle === '') {
+		return '';
+	}
+	foreach (ss_uae_emirate_definitions() as $slug => $def) {
+		$label_norm = ss_uae_normalize_emirate_slug($def['label']);
+		$slug_norm  = ss_uae_normalize_emirate_slug($slug);
+		if ($needle === $label_norm || $needle === $slug_norm) {
+			return (string) $def['label'];
+		}
+	}
+	return '';
+}
+
+/**
+ * Return selected UAE emirate label from checkout customer destination.
+ *
+ * @return string
+ */
+function ss_uae_checkout_selected_emirate_label() {
+	if (!function_exists('WC') || !WC()->customer) {
+		return '';
+	}
+	$country = (string) WC()->customer->get_shipping_country();
+	$city    = (string) WC()->customer->get_shipping_city();
+
+	if ($country !== 'AE') {
+		$country = (string) WC()->customer->get_billing_country();
+		$city    = (string) WC()->customer->get_billing_city();
+	}
+	if ($country !== 'AE') {
+		return '';
+	}
+	return ss_uae_emirate_label_from_city($city);
+}
+
+/**
+ * Checkout clarity: always show selected shipping method cost in label text.
+ *
+ * Example output: "UAE test — 40 AED"
+ *
+ * @param string           $label  Rendered method label.
+ * @param WC_Shipping_Rate $method Shipping method object.
+ * @return string
+ */
+function ss_uae_checkout_shipping_label_with_cost($label, $method) {
+	if (!ss_uae_is_checkout_ui() || !is_object($method) || !method_exists($method, 'get_cost')) {
+		return $label;
+	}
+	$cost = $method->get_cost();
+	if ($cost === '' || !is_numeric($cost)) {
+		return $label;
+	}
+	$amount = wc_price((float) $cost);
+	$text   = method_exists($method, 'get_label')
+		? trim((string) $method->get_label())
+		: trim(wp_strip_all_tags((string) $label));
+	$emirate = ss_uae_checkout_selected_emirate_label();
+	if ($emirate !== '') {
+		if ((float) $cost <= 0.000001) {
+			return sprintf('%1$s — %2$s', $emirate, __('Free shipping', 'woocommerce'));
+		}
+		return sprintf('%1$s — %2$s', $emirate, wp_strip_all_tags($amount));
+	}
+	return sprintf('%1$s — %2$s', $text, wp_strip_all_tags($amount));
+}
+
+add_filter('woocommerce_cart_shipping_method_full_label', 'ss_uae_checkout_shipping_label_with_cost', 20, 2);
