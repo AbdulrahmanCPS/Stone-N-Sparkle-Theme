@@ -10,6 +10,7 @@
 	window.ssUaeCheckoutBound = true;
 
 	var AE = 'AE';
+	var feedbackClass = 'ss-shipping-feedback';
 
 	function shipToDifferent() {
 		var $box = $('#ship-to-different-address');
@@ -131,12 +132,79 @@
 		$(document.body).trigger('update_checkout');
 	}
 
+	function currentShippingSummaryText() {
+		var $shippingRow = $('.woocommerce-checkout-review-order-table tfoot tr.shipping').first();
+		if (!$shippingRow.length) {
+			return '';
+		}
+		var text = $shippingRow.find('td').text().replace(/\s+/g, ' ').trim();
+		return text;
+	}
+
+	function ensureFeedbackNode(fieldSelector) {
+		var $field = $(fieldSelector);
+		if (!$field.length) {
+			return $();
+		}
+		var $node = $field.find('.' + feedbackClass);
+		if ($node.length) {
+			return $node.first();
+		}
+		$node = $('<p/>', {
+			class: feedbackClass,
+			'aria-live': 'polite'
+		});
+		$field.append($node);
+		return $node;
+	}
+
+	function updateShippingFeedback() {
+		var text = currentShippingSummaryText();
+		var isShipDifferent = shipToDifferent();
+		var billingAE = $('#billing_country').val() === AE;
+		var shippingAE = isShipDifferent && $('#shipping_country').val() === AE;
+		var hasBillingEmirate = $('#billing_emirate').val();
+		var hasShippingEmirate = $('#shipping_emirate').val();
+		var hasBillingCity = ($('#billing_city').val() || '').toString().trim();
+		var hasShippingCity = ($('#shipping_city').val() || '').toString().trim();
+
+		var $billingEmirateNode = ensureFeedbackNode('#billing_emirate_field');
+		var $billingCityNode = ensureFeedbackNode('#billing_city_field');
+		var $shippingEmirateNode = ensureFeedbackNode('#shipping_emirate_field');
+		var $shippingCityNode = ensureFeedbackNode('#shipping_city_field');
+
+		$billingEmirateNode.removeClass('is-visible').text('');
+		$billingCityNode.removeClass('is-visible').text('');
+		$shippingEmirateNode.removeClass('is-visible').text('');
+		$shippingCityNode.removeClass('is-visible').text('');
+
+		if (!text) {
+			return;
+		}
+
+		if (!isShipDifferent) {
+			if (billingAE && hasBillingEmirate) {
+				$billingEmirateNode.text('Shipping: ' + text).addClass('is-visible');
+			} else if (!billingAE && hasBillingCity) {
+				$billingCityNode.text('Shipping: ' + text).addClass('is-visible');
+			}
+			return;
+		}
+
+		if (shippingAE && hasShippingEmirate) {
+			$shippingEmirateNode.text('Shipping: ' + text).addClass('is-visible');
+		} else if (!shippingAE && hasShippingCity) {
+			$shippingCityNode.text('Shipping: ' + text).addClass('is-visible');
+		}
+	}
+
 	$(function () {
 		var $body = $(document.body);
 
 		$body.on('change.ssUaeCheckout', '#billing_country, #billing_emirate', function () {
 			applyBilling();
 			applyShipping();
+			updateShippingFeedback();
 			requestTotalsUpdate();
 		});
 
@@ -145,14 +213,17 @@
 			'#shipping_country, #shipping_emirate, #ship-to-different-address input',
 			function () {
 				applyShipping();
+				updateShippingFeedback();
 				requestTotalsUpdate();
 			}
 		);
 
 		$body.on('updated_checkout.ssUaeCheckout', function () {
 			applyAll();
+			updateShippingFeedback();
 		});
 
 		applyAll();
+		updateShippingFeedback();
 	});
 })(jQuery);

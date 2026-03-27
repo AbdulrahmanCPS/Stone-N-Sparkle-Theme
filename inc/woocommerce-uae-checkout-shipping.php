@@ -92,6 +92,24 @@ function ss_uae_is_valid_emirate_value($raw) {
 }
 
 /**
+ * Normalize noisy UAE state placeholders (e.g. AEDUBAI) to empty.
+ *
+ * @param string $state Raw state value.
+ * @return string
+ */
+function ss_uae_sanitize_state_for_uae($state) {
+	$state = trim((string) $state);
+	if ($state === '') {
+		return '';
+	}
+	$compact = strtoupper((string) preg_replace('/[^A-Z]/', '', $state));
+	if ($compact !== '' && strpos($compact, 'AE') === 0 && strlen($compact) > 2) {
+		return '';
+	}
+	return $state;
+}
+
+/**
  * ACF field name from city/emirate string.
  *
  * Accepts either display labels ("Ras Al Khaimah") or stored select values
@@ -291,6 +309,16 @@ function ss_uae_is_checkout_ui() {
 }
 
 /**
+ * @return bool
+ */
+function ss_uae_is_account_edit_address_ui() {
+	if (!function_exists('is_account_page') || !is_account_page()) {
+		return false;
+	}
+	return function_exists('is_wc_endpoint_url') && is_wc_endpoint_url('edit-address');
+}
+
+/**
  * Enqueue checkout script.
  *
  * @return void
@@ -311,6 +339,58 @@ function ss_uae_enqueue_checkout_assets() {
 }
 
 add_action('wp_enqueue_scripts', 'ss_uae_enqueue_checkout_assets', 20);
+
+/**
+ * Enqueue account edit-address helper script.
+ *
+ * @return void
+ */
+function ss_uae_enqueue_account_address_assets() {
+	if (!ss_uae_is_account_edit_address_ui()) {
+		return;
+	}
+	$path = get_template_directory() . '/assets/js/account-uae-address.js';
+	$ver  = file_exists($path) ? (string) filemtime($path) : (defined('SS_THEME_VERSION') ? SS_THEME_VERSION : '1');
+	wp_enqueue_script(
+		'stone-sparkle-account-uae-address',
+		get_template_directory_uri() . '/assets/js/account-uae-address.js',
+		array('jquery'),
+		$ver,
+		true
+	);
+}
+
+add_action('wp_enqueue_scripts', 'ss_uae_enqueue_account_address_assets', 21);
+
+/**
+ * Default checkout to shipping address when customer has saved shipping details.
+ *
+ * @param bool $checked WooCommerce computed value.
+ * @return bool
+ */
+function ss_uae_default_ship_to_different_checked($checked) {
+	if (!ss_uae_is_checkout_ui() || !is_user_logged_in() || !function_exists('WC') || !WC()->customer) {
+		return $checked;
+	}
+	$customer = WC()->customer;
+	$fields   = array(
+		(string) $customer->get_shipping_address_1(),
+		(string) $customer->get_shipping_address_2(),
+		(string) $customer->get_shipping_city(),
+		(string) $customer->get_shipping_state(),
+		(string) $customer->get_shipping_postcode(),
+		(string) $customer->get_shipping_first_name(),
+		(string) $customer->get_shipping_last_name(),
+	);
+	foreach ($fields as $value) {
+		if (trim($value) !== '') {
+			return true;
+		}
+	}
+	return $checked;
+}
+
+add_filter('woocommerce_ship_to_different_address_checked', 'ss_uae_default_ship_to_different_checked', 20);
 
 /**
  * Relax / enforce required flags for city vs emirate when customer country is AE.
@@ -364,16 +444,115 @@ function ss_uae_checkout_required_fields($fields) {
 	if (isset($fields['billing']['billing_emirate'])) {
 		$fields['billing']['billing_emirate']['required'] = ($bc === 'AE');
 	}
+	if (isset($fields['billing']['billing_state']) && $bc === 'AE') {
+		$fields['billing']['billing_state']['required'] = false;
+		$fields['billing']['billing_state']['default']  = '';
+		$fields['billing']['billing_state']['placeholder'] = __('State / County (optional)', 'stone-sparkle');
+	}
+	if (isset($fields['billing']['billing_phone'])) {
+		$fields['billing']['billing_phone']['required'] = true;
+	}
 	if (isset($fields['shipping']['shipping_city'])) {
 		$fields['shipping']['shipping_city']['required'] = ($sc !== 'AE');
 	}
 	if (isset($fields['shipping']['shipping_emirate'])) {
 		$fields['shipping']['shipping_emirate']['required'] = ($sc === 'AE');
 	}
+	if (isset($fields['shipping']['shipping_state']) && $sc === 'AE') {
+		$fields['shipping']['shipping_state']['required'] = false;
+		$fields['shipping']['shipping_state']['default']  = '';
+		$fields['shipping']['shipping_state']['placeholder'] = __('State / County (optional)', 'stone-sparkle');
+	}
+	if (isset($fields['shipping']['shipping_phone'])) {
+		$fields['shipping']['shipping_phone']['required'] = true;
+	}
 	return $fields;
 }
 
 add_filter('woocommerce_checkout_fields', 'ss_uae_checkout_required_fields', 9999);
+
+/**
+ * Account address field config for the UAE emirate selector.
+ *
+ * @return array<string, mixed>
+ */
+function ss_uae_account_emirate_field_config() {
+	$options = array('' => __('Select an emirate', 'stone-sparkle'));
+	foreach (ss_uae_emirate_definitions() as $slug => $def) {
+		$options[$slug] = $def['label'];
+	}
+	return array(
+		'label'    => __('City / Emirate', 'stone-sparkle'),
+		'type'     => 'select',
+		'required' => false,
+		'class'    => array('form-row-wide'),
+		'priority' => 72,
+		'options'  => $options,
+		'choices'  => $options,
+	);
+}
+
+/**
+ * Keep billing account-address fields aligned with UAE/non-UAE checkout behavior.
+ *
+ * @param array<string, array<string, mixed>> $fields  Billing fields.
+ * @param string                              $country Country code.
+ * @return array<string, array<string, mixed>>
+ */
+function ss_uae_billing_account_fields($fields, $country) {
+	$country = strtoupper((string) $country);
+	if (!isset($fields['billing_emirate'])) {
+		$fields['billing_emirate'] = ss_uae_account_emirate_field_config();
+	}
+	if (isset($fields['billing_city'])) {
+		$fields['billing_city']['required'] = ($country !== 'AE');
+	}
+	if (isset($fields['billing_emirate'])) {
+		$fields['billing_emirate']['required'] = ($country === 'AE');
+	}
+	if (isset($fields['billing_state']) && $country === 'AE') {
+		$fields['billing_state']['required']    = false;
+		$fields['billing_state']['default']     = '';
+		$fields['billing_state']['placeholder'] = __('State / County (optional)', 'stone-sparkle');
+	}
+	if (isset($fields['billing_phone'])) {
+		$fields['billing_phone']['required'] = true;
+	}
+	return $fields;
+}
+
+add_filter('woocommerce_billing_fields', 'ss_uae_billing_account_fields', 20, 2);
+
+/**
+ * Keep shipping account-address fields aligned with UAE/non-UAE checkout behavior.
+ *
+ * @param array<string, array<string, mixed>> $fields  Shipping fields.
+ * @param string                              $country Country code.
+ * @return array<string, array<string, mixed>>
+ */
+function ss_uae_shipping_account_fields($fields, $country) {
+	$country = strtoupper((string) $country);
+	if (!isset($fields['shipping_emirate'])) {
+		$fields['shipping_emirate'] = ss_uae_account_emirate_field_config();
+	}
+	if (isset($fields['shipping_city'])) {
+		$fields['shipping_city']['required'] = ($country !== 'AE');
+	}
+	if (isset($fields['shipping_emirate'])) {
+		$fields['shipping_emirate']['required'] = ($country === 'AE');
+	}
+	if (isset($fields['shipping_state']) && $country === 'AE') {
+		$fields['shipping_state']['required']    = false;
+		$fields['shipping_state']['default']     = '';
+		$fields['shipping_state']['placeholder'] = __('State / County (optional)', 'stone-sparkle');
+	}
+	if (isset($fields['shipping_phone'])) {
+		$fields['shipping_phone']['required'] = true;
+	}
+	return $fields;
+}
+
+add_filter('woocommerce_shipping_fields', 'ss_uae_shipping_account_fields', 20, 2);
 
 /**
  * Ensure posted data carries human-readable city for validation and order (runs after WC builds $data).
@@ -394,12 +573,18 @@ function ss_uae_filter_checkout_posted_data($data) {
 			}
 		}
 	}
+	if (($data['billing_country'] ?? '') === 'AE') {
+		$data['billing_state'] = ss_uae_sanitize_state_for_uae($data['billing_state'] ?? '');
+	}
 	$ship_diff = !empty($data['ship_to_different_address']);
 	if ($ship_diff && (($data['shipping_country'] ?? '') === 'AE') && !empty($data['shipping_emirate'])) {
 		$label = ss_uae_label_from_slug($data['shipping_emirate']);
 		if ($label !== '') {
 			$data['shipping_city'] = $label;
 		}
+	}
+	if (($data['shipping_country'] ?? '') === 'AE') {
+		$data['shipping_state'] = ss_uae_sanitize_state_for_uae($data['shipping_state'] ?? '');
 	}
 	return $data;
 }
@@ -450,6 +635,9 @@ function ss_uae_checkout_process_early_sync() {
 			$_POST['billing_city'] = $label;
 		}
 	}
+	if (($data['billing_country'] ?? '') === 'AE') {
+		$_POST['billing_state'] = ss_uae_sanitize_state_for_uae($_POST['billing_state'] ?? '');
+	}
 	$ship_diff = !empty($data['ship_to_different_address']);
 	if (!$ship_diff) {
 		if (($data['billing_country'] ?? '') === 'AE' && !empty($data['billing_emirate'])) {
@@ -464,10 +652,38 @@ function ss_uae_checkout_process_early_sync() {
 			$_POST['shipping_city'] = $label;
 		}
 	}
+	if (($data['shipping_country'] ?? '') === 'AE') {
+		$_POST['shipping_state'] = ss_uae_sanitize_state_for_uae($_POST['shipping_state'] ?? '');
+	}
 	// phpcs:enable WordPress.Security.NonceVerification.Missing
 }
 
 add_action('woocommerce_checkout_process', 'ss_uae_checkout_process_early_sync', 1);
+
+/**
+ * Keep UAE state fields visually empty when noisy placeholders are present.
+ *
+ * @param mixed  $value Current field value.
+ * @param string $input Input key.
+ * @return mixed
+ */
+function ss_uae_checkout_state_value($value, $input) {
+	if ($input !== 'billing_state' && $input !== 'shipping_state') {
+		return $value;
+	}
+	if (!function_exists('WC') || !WC()->customer) {
+		return $value;
+	}
+	$country = ($input === 'billing_state')
+		? (string) WC()->customer->get_billing_country()
+		: (string) WC()->customer->get_shipping_country();
+	if ($country !== 'AE') {
+		return $value;
+	}
+	return ss_uae_sanitize_state_for_uae((string) $value);
+}
+
+add_filter('woocommerce_checkout_get_value', 'ss_uae_checkout_state_value', 10, 2);
 
 /**
  * Extra validation and remove city required errors when emirate is used.
