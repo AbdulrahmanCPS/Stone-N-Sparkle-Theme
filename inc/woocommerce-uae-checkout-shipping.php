@@ -472,6 +472,27 @@ function ss_uae_checkout_required_fields($fields) {
 add_filter('woocommerce_checkout_fields', 'ss_uae_checkout_required_fields', 9999);
 
 /**
+ * Account address field config for the UAE emirate selector.
+ *
+ * @return array<string, mixed>
+ */
+function ss_uae_account_emirate_field_config() {
+	$options = array('' => __('Select an emirate', 'stone-sparkle'));
+	foreach (ss_uae_emirate_definitions() as $slug => $def) {
+		$options[$slug] = $def['label'];
+	}
+	return array(
+		'label'    => __('City / Emirate', 'stone-sparkle'),
+		'type'     => 'select',
+		'required' => false,
+		'class'    => array('form-row-wide'),
+		'priority' => 72,
+		'options'  => $options,
+		'choices'  => $options,
+	);
+}
+
+/**
  * Keep billing account-address fields aligned with UAE/non-UAE checkout behavior.
  *
  * @param array<string, array<string, mixed>> $fields  Billing fields.
@@ -480,6 +501,9 @@ add_filter('woocommerce_checkout_fields', 'ss_uae_checkout_required_fields', 999
  */
 function ss_uae_billing_account_fields($fields, $country) {
 	$country = strtoupper((string) $country);
+	if (!isset($fields['billing_emirate'])) {
+		$fields['billing_emirate'] = ss_uae_account_emirate_field_config();
+	}
 	if (isset($fields['billing_city'])) {
 		$fields['billing_city']['required'] = ($country !== 'AE');
 	}
@@ -508,6 +532,9 @@ add_filter('woocommerce_billing_fields', 'ss_uae_billing_account_fields', 20, 2)
  */
 function ss_uae_shipping_account_fields($fields, $country) {
 	$country = strtoupper((string) $country);
+	if (!isset($fields['shipping_emirate'])) {
+		$fields['shipping_emirate'] = ss_uae_account_emirate_field_config();
+	}
 	if (isset($fields['shipping_city'])) {
 		$fields['shipping_city']['required'] = ($country !== 'AE');
 	}
@@ -518,9 +545,6 @@ function ss_uae_shipping_account_fields($fields, $country) {
 		$fields['shipping_state']['required']    = false;
 		$fields['shipping_state']['default']     = '';
 		$fields['shipping_state']['placeholder'] = __('State / County (optional)', 'stone-sparkle');
-	}
-	if (isset($fields['shipping_postcode'])) {
-		$fields['shipping_postcode']['default'] = '';
 	}
 	if (isset($fields['shipping_phone'])) {
 		$fields['shipping_phone']['required'] = true;
