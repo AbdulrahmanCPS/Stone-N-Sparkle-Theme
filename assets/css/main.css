@@ -3993,6 +3993,10 @@ body.single-product .woocommerce .variations .value .reset_variations[style*="vi
   width: 100%;
   margin-top: 6px;
 }
+.single-product .single_variation_wrap:not(.ss-has-visible-price){
+  row-gap: 0;
+  margin-top: 0;
+}
 .single-product .single_variation_wrap .woocommerce-variation.single_variation{
   display: contents;
 }
@@ -4006,12 +4010,21 @@ body.single-product .woocommerce .variations .value .reset_variations[style*="vi
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 30px;
+  min-height: 0;
   margin: 0;
 }
 .single-product .single_variation_wrap .ss-pdp-variation-actions:empty{
   display: none;
   min-height: 0;
+}
+.single-product .single_variation_wrap .woocommerce-variation-description:empty,
+.single-product .single_variation_wrap .woocommerce-variation-availability:empty,
+.single-product .single_variation_wrap .woocommerce-variation-price:empty,
+.single-product .single_variation_wrap .ss-pdp-variation-price-row:empty{
+  display: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 .single-product .single_variation_wrap .ss-pdp-variation-actions .reset_variations{
   margin: 0;
@@ -4020,7 +4033,7 @@ body.single-product .woocommerce .variations .value .reset_variations[style*="vi
 }
 .single-product .single_variation_wrap .ss-pdp-variation-price-row{
   order: 3;
-  min-height: 30px;
+  min-height: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -4031,10 +4044,16 @@ body.single-product .woocommerce .variations .value .reset_variations[style*="vi
 /* If wrapper class isn't present, style Woo's native variation price similarly. */
 .single-product .single_variation_wrap .woocommerce-variation-price{
   order: 3;
-  min-height: 30px;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+/* Only reserve vertical space when a real variation price is shown. */
+.single-product .single_variation_wrap.ss-has-visible-price .ss-pdp-variation-actions,
+.single-product .single_variation_wrap.ss-has-visible-price .ss-pdp-variation-price-row,
+.single-product .single_variation_wrap.ss-has-visible-price .woocommerce-variation-price{
+  min-height: 30px;
 }
 /* Only show Clear after Woo marks it visible. */
 .single-product .single_variation_wrap .ss-pdp-variation-actions .reset_variations[style*="visibility: hidden"]{
