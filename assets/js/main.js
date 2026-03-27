@@ -912,8 +912,10 @@
       const placeClearLink = () => {
         const clearLink = getClearLink();
         if (!clearLink) return;
+        const priceVisible = hasVisiblePrice();
+        variationWrap.classList.toggle('ss-has-visible-price', priceVisible);
 
-        if (hasVisiblePrice()) {
+        if (priceVisible) {
           if (clearLink.parentElement !== actionsWrap) {
             actionsWrap.appendChild(clearLink);
           }
