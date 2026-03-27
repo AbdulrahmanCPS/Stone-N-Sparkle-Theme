@@ -82,6 +82,16 @@ function ss_uae_label_from_slug($raw) {
 }
 
 /**
+ * Validate that a submitted emirate value exists in the configured list.
+ *
+ * @param string $raw Submitted emirate value.
+ * @return bool
+ */
+function ss_uae_is_valid_emirate_value($raw) {
+	return ss_uae_label_from_slug($raw) !== '';
+}
+
+/**
  * ACF field name from city/emirate string.
  *
  * Accepts either display labels ("Ras Al Khaimah") or stored select values
@@ -443,6 +453,11 @@ function ss_uae_after_checkout_validation($data, $errors) {
 				'billing_emirate_required',
 				__('Please select your emirate.', 'stone-sparkle')
 			);
+		} elseif (!ss_uae_is_valid_emirate_value((string) $data['billing_emirate'])) {
+			$errors->add(
+				'billing_emirate_invalid',
+				__('Please select a valid emirate.', 'stone-sparkle')
+			);
 		} else {
 			$errors->remove('billing_city_required');
 		}
@@ -453,6 +468,11 @@ function ss_uae_after_checkout_validation($data, $errors) {
 			$errors->add(
 				'shipping_emirate_required',
 				__('Please select your shipping emirate.', 'stone-sparkle')
+			);
+		} elseif (!ss_uae_is_valid_emirate_value((string) $data['shipping_emirate'])) {
+			$errors->add(
+				'shipping_emirate_invalid',
+				__('Please select a valid shipping emirate.', 'stone-sparkle')
 			);
 		} else {
 			$errors->remove('shipping_city_required');
