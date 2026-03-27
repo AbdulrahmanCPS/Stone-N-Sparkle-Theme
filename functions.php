@@ -1707,6 +1707,11 @@ require_once get_template_directory() . '/inc/category-archive-helpers.php';
 require_once get_template_directory() . '/inc/private-view-request.php';
 
 /**
+ * UAE emirate checkout: emirate ↔ city sync + ACF-backed flat rates (classic checkout).
+ */
+require_once get_template_directory() . '/inc/woocommerce-uae-checkout-shipping.php';
+
+/**
  * Variable product: output "Clear" after the variation price block, not inside the last attribute cell.
  *
  * @return void
