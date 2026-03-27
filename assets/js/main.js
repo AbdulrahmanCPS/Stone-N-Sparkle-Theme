@@ -879,6 +879,77 @@
 })();
 
 /**
+ * Variable products: move "Clear" dynamically.
+ * - No visible variation price: keep Clear beside the last selector.
+ * - Visible variation price: move Clear left of the price row.
+ */
+(function(){
+  const initDynamicClearPlacement = () => {
+    const forms = document.querySelectorAll('form.variations_form');
+    if (!forms.length) return;
+
+    forms.forEach((form) => {
+      const lastValueCell = form.querySelector('.variations tbody tr:last-child td.value');
+      const actionsWrap = form.querySelector('.single_variation_wrap .ss-pdp-variation-actions');
+      const variationWrap = form.querySelector('.single_variation_wrap');
+
+      if (!lastValueCell || !actionsWrap || !variationWrap) return;
+
+      const getClearLink = () => form.querySelector('.reset_variations');
+      const getPriceNode = () =>
+        form.querySelector('.single_variation_wrap .ss-pdp-variation-price-row .woocommerce-variation-price') ||
+        form.querySelector('.single_variation_wrap .woocommerce-variation-price');
+
+      const hasVisiblePrice = () => {
+        const priceNode = getPriceNode();
+        if (!priceNode) return false;
+        const text = (priceNode.textContent || '').trim();
+        if (!text) return false;
+        const style = window.getComputedStyle(priceNode);
+        return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+      };
+
+      const placeClearLink = () => {
+        const clearLink = getClearLink();
+        if (!clearLink) return;
+
+        if (hasVisiblePrice()) {
+          if (clearLink.parentElement !== actionsWrap) {
+            actionsWrap.appendChild(clearLink);
+          }
+        } else if (clearLink.parentElement !== lastValueCell) {
+          lastValueCell.appendChild(clearLink);
+        }
+      };
+
+      placeClearLink();
+
+      if (typeof jQuery !== 'undefined') {
+        jQuery(form).on(
+          'found_variation show_variation reset_data hide_variation woocommerce_update_variation_values',
+          placeClearLink
+        );
+      }
+
+      const observer = new MutationObserver(placeClearLink);
+      observer.observe(variationWrap, {
+        subtree: true,
+        childList: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+      });
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDynamicClearPlacement, { once: true });
+  } else {
+    initDynamicClearPlacement();
+  }
+})();
+
+/**
  * Private View modal
  */
 (function(){
