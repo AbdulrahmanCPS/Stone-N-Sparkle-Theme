@@ -45,7 +45,12 @@ jobs:
             cd ~/html/wp-content/themes; \
             if [ ! -d theme3 ]; then echo 'theme3 not found at ~/html/wp-content/themes/theme3'; exit 1; fi; \
             mkdir -p ~/backups/themes; \
-            tar -czf ~/backups/themes/theme3-${TS}.tar.gz theme3; \
+            SNAP_DIR=~/backups/themes/.theme3-snapshot-${TS}; \
+            rm -rf \$SNAP_DIR; \
+            mkdir -p \$SNAP_DIR; \
+            cp -a theme3 \$SNAP_DIR/; \
+            tar -czf ~/backups/themes/theme3-${TS}.tar.gz -C \$SNAP_DIR theme3; \
+            rm -rf \$SNAP_DIR; \
             ln -sfn ~/backups/themes/theme3-${TS}.tar.gz ~/backups/themes/theme3-latest.tar.gz; \
             ls -1t ~/backups/themes/theme3-*.tar.gz | tail -n +11 | xargs -r rm -f; \
             echo Backup created: ~/backups/themes/theme3-${TS}.tar.gz \
