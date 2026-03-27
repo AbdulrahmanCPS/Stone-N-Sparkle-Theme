@@ -322,6 +322,39 @@ function ss_uae_checkout_required_fields($fields) {
 	if (!function_exists('WC') || !WC()->customer) {
 		return $fields;
 	}
+
+	// Fallback registration: if checkout-field plugin entries are missing, add emirate selects.
+	$choices = array();
+	foreach (ss_uae_emirate_definitions() as $slug => $def) {
+		$choices[$slug] = $def['label'];
+	}
+	if (!isset($fields['billing'])) {
+		$fields['billing'] = array();
+	}
+	if (!isset($fields['shipping'])) {
+		$fields['shipping'] = array();
+	}
+	if (!isset($fields['billing']['billing_emirate'])) {
+		$fields['billing']['billing_emirate'] = array(
+			'type'     => 'select',
+			'label'    => __('City / Emirate', 'stone-sparkle'),
+			'required' => false,
+			'class'    => array('form-row-wide'),
+			'priority' => 72,
+			'choices'  => $choices,
+		);
+	}
+	if (!isset($fields['shipping']['shipping_emirate'])) {
+		$fields['shipping']['shipping_emirate'] = array(
+			'type'     => 'select',
+			'label'    => __('City / Emirate', 'stone-sparkle'),
+			'required' => false,
+			'class'    => array('form-row-wide'),
+			'priority' => 72,
+			'choices'  => $choices,
+		);
+	}
+
 	$bc = (string) WC()->customer->get_billing_country();
 	$sc = (string) WC()->customer->get_shipping_country();
 

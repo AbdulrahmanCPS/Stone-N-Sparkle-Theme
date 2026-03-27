@@ -1,93 +1,180 @@
 {
-	"key": "group_ss_uae_shipping_prices",
-	"title": "UAE emirate shipping prices",
-	"fields": [
-		{
-			"key": "field_ss_uae_dubai_shipping_price",
-			"label": "Dubai — shipping (AED)",
-			"name": "dubai_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		},
-		{
-			"key": "field_ss_uae_abu_dhabi_shipping_price",
-			"label": "Abu Dhabi — shipping (AED)",
-			"name": "abu_dhabi_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		},
-		{
-			"key": "field_ss_uae_sharjah_shipping_price",
-			"label": "Sharjah — shipping (AED)",
-			"name": "sharjah_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		},
-		{
-			"key": "field_ss_uae_ajman_shipping_price",
-			"label": "Ajman — shipping (AED)",
-			"name": "ajman_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		},
-		{
-			"key": "field_ss_uae_umm_al_quwain_shipping_price",
-			"label": "Umm Al Quwain — shipping (AED)",
-			"name": "umm_al_quwain_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		},
-		{
-			"key": "field_ss_uae_ras_al_khaimah_shipping_price",
-			"label": "Ras Al Khaimah — shipping (AED)",
-			"name": "ras_al_khaimah_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		},
-		{
-			"key": "field_ss_uae_fujairah_shipping_price",
-			"label": "Fujairah — shipping (AED)",
-			"name": "fujairah_shipping_price",
-			"type": "number",
-			"min": 0,
-			"step": "0.01",
-			"default_value": "",
-			"instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping."
-		}
-	],
-	"location": [
-		[
-			{
-				"param": "page_template",
-				"operator": "==",
-				"value": "page-uae-shipping-settings.php"
-			}
-		]
-	],
-	"menu_order": 0,
-	"position": "normal",
-	"style": "default",
-	"label_placement": "top",
-	"instruction_placement": "label",
-	"active": true,
-	"description": "",
-	"modified": 1743000000
+    "key": "group_ss_uae_shipping_prices",
+    "title": "UAE emirate shipping prices",
+    "fields": [
+        {
+            "key": "field_ss_uae_dubai_shipping_price",
+            "label": "Dubai — shipping (AED)",
+            "name": "dubai_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_ss_uae_abu_dhabi_shipping_price",
+            "label": "Abu Dhabi — shipping (AED)",
+            "name": "abu_dhabi_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_ss_uae_sharjah_shipping_price",
+            "label": "Sharjah — shipping (AED)",
+            "name": "sharjah_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_ss_uae_ajman_shipping_price",
+            "label": "Ajman — shipping (AED)",
+            "name": "ajman_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_ss_uae_umm_al_quwain_shipping_price",
+            "label": "Umm Al Quwain — shipping (AED)",
+            "name": "umm_al_quwain_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_ss_uae_ras_al_khaimah_shipping_price",
+            "label": "Ras Al Khaimah — shipping (AED)",
+            "name": "ras_al_khaimah_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_ss_uae_fujairah_shipping_price",
+            "label": "Fujairah — shipping (AED)",
+            "name": "fujairah_shipping_price",
+            "aria-label": "",
+            "type": "number",
+            "instructions": "Flat shipping amount for this emirate when destination is UAE. Use 0 for free shipping.",
+            "required": false,
+            "conditional_logic": false,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "min": 0,
+            "step": "0.01",
+            "default_value": "",
+            "max": "",
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "page_template",
+                "operator": "==",
+                "value": "page-uae-shipping-settings.php"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "normal",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "",
+    "show_in_rest": 0,
+    "display_title": "",
+    "modified": 1774625025
 }
