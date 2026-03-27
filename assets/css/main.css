@@ -1338,6 +1338,20 @@ body.woocommerce-checkout form.checkout .form-row label .required{
   color: #b4232e;
   font-weight: 600;
 }
+body.woocommerce-checkout .ss-shipping-feedback{
+  display: none;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  border-radius: 6px;
+  border: 1px solid rgba(61, 19, 23, 0.18);
+  background: rgba(255, 238, 219, 0.5);
+  color: var(--ss-text);
+}
+body.woocommerce-checkout .ss-shipping-feedback.is-visible{
+  display: block;
+}
 
 body.woocommerce-checkout form.checkout input.input-text,
 body.woocommerce-checkout form.checkout input[type="email"],
@@ -1475,9 +1489,11 @@ body.woocommerce-checkout #payment #place_order:hover{
     grid-column: 2;
     grid-row: 2 / span 2;
     position: sticky;
-    top: clamp(90px, 10vw, 120px);
+    top: clamp(72px, 8vw, 108px);
     z-index: 1;
     align-self: start;
+    max-height: calc(100vh - clamp(72px, 8vw, 108px) - 20px);
+    overflow: auto;
   }
   body.woocommerce-checkout form.checkout.woocommerce-checkout > #payment{
     grid-column: 1;
