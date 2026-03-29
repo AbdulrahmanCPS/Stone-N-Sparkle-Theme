@@ -68,12 +68,19 @@ $sections = [
 $contact_cfg = [
     'enabled' => (bool) ss_footer_get_field('footer_contact_enabled', 1),
     'title'   => (string) ss_footer_get_field('footer_contact_title', 'Contact'),
+    'phone'   => trim((string) ss_footer_get_field('footer_contact_phone', '')),
+    'email'   => trim((string) ss_footer_get_field('footer_contact_email', '')),
+    'address' => (string) ss_footer_get_field('footer_contact_address', ''),
     'menu'    => 'footer_contact_menu',
+];
+
+$brand_cfg = [
+    'enabled' => (bool) ss_footer_get_field('footer_brand_enabled', 1),
+    'title'   => (string) ss_footer_get_field('footer_brand_title', 'STONE AND SPARKLE'),
 ];
 
 $social_enabled = (bool) ss_footer_get_field('footer_social_enabled', 1);
 $social_title   = (string) ss_footer_get_field('footer_social_title', 'Follow Us');
-$social_desc    = (string) ss_footer_get_field('footer_social_description', '');
 
 $copyright_enabled = (bool) ss_footer_get_field('footer_copyright_enabled', 1);
 $copyright_text    = trim((string) ss_footer_get_field('footer_copyright_text', '© {year} {site}. All rights reserved.'));
@@ -87,6 +94,15 @@ $copyright_text    = str_replace(
   <div class="ss-container">
 
     <div class="ss-footer-inner ss-footer-grid">
+
+<?php if ($brand_cfg['enabled']): ?>
+  <div class="ss-footer-col ss-footer-section ss-footer-brand">
+    <h4><?php echo esc_html($brand_cfg['title']); ?></h4>
+    <div class="ss-footer-links">
+      <?php ss_footer_render_link_slots('brand', 8); ?>
+    </div>
+  </div>
+<?php endif; ?>
 
 <?php foreach ($sections as $key => $cfg): ?>
   <?php if (!$cfg['enabled']) { continue; } ?>
@@ -191,10 +207,6 @@ $copyright_text    = str_replace(
         <div class="ss-footer-col ss-footer-section ss-footer-social">
           <h4><?php echo esc_html($social_title); ?></h4>
 
-          <?php if ($social_desc !== ''): ?>
-            <div class="ss-footer-social-desc"><?php echo esc_html($social_desc); ?></div>
-          <?php endif; ?>
-
           <div class="ss-footer-social-icons" aria-label="<?php echo esc_attr($social_title); ?>">
             <?php
             for ($i = 1; $i <= 8; $i++) {
@@ -233,6 +245,19 @@ $copyright_text    = str_replace(
 <?php if ($contact_cfg['enabled']) : ?>
   <div class="ss-footer-col ss-footer-section ss-footer-contact">
     <h4><?php echo esc_html($contact_cfg['title']); ?></h4>
+    <?php if ($contact_cfg['phone'] !== '' || $contact_cfg['email'] !== '' || trim((string) $contact_cfg['address']) !== ''): ?>
+      <ul class="ss-footer-menu ss-footer-contact-details">
+        <?php if ($contact_cfg['phone'] !== ''): ?>
+          <li class="menu-item"><a href="<?php echo esc_url('tel:' . preg_replace('/[^0-9\+]/', '', $contact_cfg['phone'])); ?>"><?php echo esc_html($contact_cfg['phone']); ?></a></li>
+        <?php endif; ?>
+        <?php if ($contact_cfg['email'] !== ''): ?>
+          <li class="menu-item"><a href="<?php echo esc_url('mailto:' . sanitize_email($contact_cfg['email'])); ?>"><?php echo esc_html($contact_cfg['email']); ?></a></li>
+        <?php endif; ?>
+        <?php if (trim((string) $contact_cfg['address']) !== ''): ?>
+          <li class="menu-item"><span><?php echo wp_kses_post($contact_cfg['address']); ?></span></li>
+        <?php endif; ?>
+      </ul>
+    <?php endif; ?>
     <div class="ss-footer-links">
       <?php
         $rendered_contact = ss_footer_render_link_slots('contact', 8);
