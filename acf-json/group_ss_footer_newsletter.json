@@ -1,0 +1,29 @@
+{
+  "key": "group_ss_footer_newsletter",
+  "title": "Footer Newsletter",
+  "fields": [
+    { "key": "field_ss_footer_newsletter_message", "label": "Newsletter section", "name": "", "type": "message", "message": "Visibility and text for the newsletter block in the footer." },
+    { "key": "field_ss_footer_newsletter_enabled", "label": "Show newsletter section", "name": "footer_newsletter_enabled", "type": "true_false", "ui": 1, "default_value": 1, "ui_on_text": "Enabled", "ui_off_text": "Disabled", "instructions": "Show or hide the newsletter block in the footer." },
+    { "key": "field_ss_footer_newsletter_title", "label": "Newsletter title", "name": "footer_newsletter_title", "type": "text", "default_value": "Newsletter" },
+    { "key": "field_ss_footer_newsletter_subtitle", "label": "Newsletter subtitle", "name": "footer_newsletter_subtitle", "type": "textarea", "new_lines": "br", "default_value": "Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.", "instructions": "Text below the title (the paragraph in the newsletter block)." },
+    { "key": "field_ss_footer_newsletter_placeholder", "label": "Email placeholder", "name": "footer_newsletter_placeholder", "type": "text", "default_value": "Enter your email" },
+    { "key": "field_ss_footer_newsletter_button_text", "label": "Button text", "name": "footer_newsletter_button_text", "type": "text", "default_value": "Join" }
+  ],
+  "location": [
+    [
+      { "param": "options_page", "operator": "==", "value": "ss-footer-settings" }
+    ],
+    [
+      { "param": "page", "operator": "==", "value": "402" }
+    ]
+  ],
+  "menu_order": 1,
+  "position": "normal",
+  "style": "default",
+  "label_placement": "top",
+  "instruction_placement": "label",
+  "active": true,
+  "description": "",
+  "show_in_rest": 0,
+  "modified": 1775000000
+}

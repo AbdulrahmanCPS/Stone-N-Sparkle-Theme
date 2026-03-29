@@ -1886,22 +1886,24 @@ function ss_footer_get_field($key, $default = '') {
         return $default;
     }
 
-    // 1) Site-wide options
-    $val = get_field($key, 'option');
+    // 1) Site-wide options (authoritative when field exists there).
+    // IMPORTANT: false is a valid value for true_false fields (disabled toggles),
+    // so we only treat null as "not found".
+    $option_val = get_field($key, 'option');
+    if ($option_val !== null) {
+        return $option_val;
+    }
 
-    // 2) Legacy page fallback
-    if ($val === null || $val === '' || $val === false) {
-        $page_id = ss_footer_settings_page_id();
-        if ($page_id > 0 && get_post($page_id)) {
-            $val = get_field($key, $page_id);
+    // 2) Legacy page fallback (for older installs still using page-based storage).
+    $page_id = ss_footer_settings_page_id();
+    if ($page_id > 0 && get_post($page_id)) {
+        $page_val = get_field($key, $page_id);
+        if ($page_val !== null) {
+            return $page_val;
         }
     }
 
-    if ($val === null || $val === '' || $val === false) {
-        return $default;
-    }
-
-    return $val;
+    return $default;
 }
 
 /**
@@ -1942,11 +1944,14 @@ add_action('acf/include_fields', function() {
 
     $fields[] = array(
         'key' => 'field_ss_footer_enabled',
-        'label' => 'footer_enabled',
+        'label' => 'Enable Footer',
         'name' => 'footer_enabled',
         'type' => 'true_false',
         'ui' => 1,
         'default_value' => 1,
+        'ui_on_text' => 'Enabled',
+        'ui_off_text' => 'Disabled',
+        'instructions' => 'Show or hide the entire footer site-wide.',
     );
 
     // Stone & Sparkle (brand column)
@@ -1961,25 +1966,20 @@ add_action('acf/include_fields', function() {
     );
     $fields[] = array(
         'key' => 'field_ss_footer_brand_enabled',
-        'label' => 'footer_brand_enabled',
+        'label' => 'Enable Stone & Sparkle Section',
         'name' => 'footer_brand_enabled',
         'type' => 'true_false',
         'ui' => 1,
         'default_value' => 1,
+        'ui_on_text' => 'Enabled',
+        'ui_off_text' => 'Disabled',
     );
     $fields[] = array(
         'key' => 'field_ss_footer_brand_title',
-        'label' => 'footer_brand_title',
+        'label' => 'Stone & Sparkle Heading',
         'name' => 'footer_brand_title',
         'type' => 'text',
         'default_value' => 'STONE AND SPARKLE',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_brand_description',
-        'label' => 'footer_brand_description',
-        'name' => 'footer_brand_description',
-        'type' => 'text',
-        'default_value' => 'Luxury jewelry, curated drops, and timeless pieces.',
     );
     // Brand manual links (ACF Free compatible): 8 link slots (label + url)
 $fields[] = array(
@@ -1992,17 +1992,19 @@ $fields[] = array(
 for ($i = 1; $i <= 8; $i++) {
     $fields[] = array(
         'key' => 'field_ss_footer_brand_link_' . $i . '_label',
-        'label' => 'brand_link_' . $i . '_label',
+        'label' => 'Brand Link ' . $i . ' Label',
         'name' => 'brand_link_' . $i . '_label',
         'type' => 'text',
         'default_value' => '',
+        'wrapper' => array('width' => '45'),
     );
     $fields[] = array(
         'key' => 'field_ss_footer_brand_link_' . $i . '_url',
-        'label' => 'brand_link_' . $i . '_url',
+        'label' => 'Brand Link ' . $i . ' URL',
         'name' => 'brand_link_' . $i . '_url',
         'type' => 'url',
         'default_value' => '',
+        'wrapper' => array('width' => '55'),
     );
 }
     $fields[] = array(
@@ -2027,20 +2029,48 @@ for ($i = 1; $i <= 8; $i++) {
 
         $fields[] = array(
             'key' => 'field_ss_footer_' . $slug . '_enabled',
-            'label' => 'footer_' . $slug . '_enabled',
+            'label' => 'Enable ' . $label . ' Section',
             'name' => 'footer_' . $slug . '_enabled',
             'type' => 'true_false',
             'ui' => 1,
             'default_value' => 1,
+            'ui_on_text' => 'Enabled',
+            'ui_off_text' => 'Disabled',
         );
 
         $fields[] = array(
             'key' => 'field_ss_footer_' . $slug . '_title',
-            'label' => 'footer_' . $slug . '_title',
+            'label' => $label . ' Heading',
             'name' => 'footer_' . $slug . '_title',
             'type' => 'text',
             'default_value' => $default_title,
         );
+        if ($slug === 'contact') {
+            $fields[] = array(
+                'key' => 'field_ss_footer_contact_phone',
+                'label' => 'Contact Phone',
+                'name' => 'footer_contact_phone',
+                'type' => 'text',
+                'default_value' => '',
+                'wrapper' => array('width' => '50'),
+            );
+            $fields[] = array(
+                'key' => 'field_ss_footer_contact_email',
+                'label' => 'Contact Email',
+                'name' => 'footer_contact_email',
+                'type' => 'text',
+                'default_value' => '',
+                'wrapper' => array('width' => '50'),
+            );
+            $fields[] = array(
+                'key' => 'field_ss_footer_contact_address',
+                'label' => 'Contact Address',
+                'name' => 'footer_contact_address',
+                'type' => 'textarea',
+                'new_lines' => 'br',
+                'default_value' => '',
+            );
+        }
 
         // Manual links (ACF Free compatible): 8 link slots (label + url)
 $fields[] = array(
@@ -2054,17 +2084,19 @@ $fields[] = array(
 for ($i = 1; $i <= 8; $i++) {
     $fields[] = array(
         'key' => 'field_ss_footer_' . $slug . '_link_' . $i . '_label',
-        'label' => $slug . '_link_' . $i . '_label',
+        'label' => $label . ' Link ' . $i . ' Label',
         'name' => $slug . '_link_' . $i . '_label',
         'type' => 'text',
         'default_value' => '',
+        'wrapper' => array('width' => '45'),
     );
     $fields[] = array(
         'key' => 'field_ss_footer_' . $slug . '_link_' . $i . '_url',
-        'label' => $slug . '_link_' . $i . '_url',
+        'label' => $label . ' Link ' . $i . ' URL',
         'name' => $slug . '_link_' . $i . '_url',
         'type' => 'url',
         'default_value' => '',
+        'wrapper' => array('width' => '55'),
     );
 }
 
@@ -2085,76 +2117,92 @@ $fields[] = array(
 
     // Social
     $fields[] = array(
+        'key' => 'field_ss_footer_social_accordion',
+        'label' => 'Follow Us Section',
+        'name' => '',
+        'type' => 'accordion',
+        'open' => 0,
+        'multi_expand' => 0,
+        'endpoint' => 0,
+    );
+    $fields[] = array(
         'key' => 'field_ss_footer_social_enabled',
-        'label' => 'footer_social_enabled',
+        'label' => 'Enable Follow Us Section',
         'name' => 'footer_social_enabled',
         'type' => 'true_false',
         'ui' => 1,
         'default_value' => 1,
+        'ui_on_text' => 'Enabled',
+        'ui_off_text' => 'Disabled',
     );
     $fields[] = array(
         'key' => 'field_ss_footer_social_title',
-        'label' => 'footer_social_title',
+        'label' => 'Follow Us Heading',
         'name' => 'footer_social_title',
         'type' => 'text',
         'default_value' => 'Follow Us',
-    );
-    $fields[] = array(
-        'key' => 'field_ss_footer_social_description',
-        'label' => 'footer_social_description',
-        'name' => 'footer_social_description',
-        'type' => 'text',
-        'default_value' => '',
     );
 
     for ($i = 1; $i <= 8; $i++) {
         $fields[] = array(
             'key' => 'field_ss_social_' . $i . '_enabled',
-            'label' => 'social_' . $i . '_enabled',
+            'label' => 'Social Icon ' . $i . ' Enabled',
             'name' => 'social_' . $i . '_enabled',
             'type' => 'true_false',
             'ui' => 1,
             'default_value' => 0,
+            'wrapper' => array('width' => '20'),
         );
         $fields[] = array(
             'key' => 'field_ss_social_' . $i . '_icon',
-            'label' => 'social_' . $i . '_icon',
+            'label' => 'Social Icon ' . $i . ' Image',
             'name' => 'social_' . $i . '_icon',
             'type' => 'image',
             'return_format' => 'array',
             'preview_size' => 'thumbnail',
             'library' => 'all',
+            'wrapper' => array('width' => '40'),
         );
         $fields[] = array(
             'key' => 'field_ss_social_' . $i . '_link',
-            'label' => 'social_' . $i . '_link',
+            'label' => 'Social Icon ' . $i . ' URL',
             'name' => 'social_' . $i . '_link',
             'type' => 'url',
             'default_value' => '',
+            'wrapper' => array('width' => '40'),
         );
         $fields[] = array(
             'key' => 'field_ss_social_' . $i . '_tooltip',
-            'label' => 'social_' . $i . '_tooltip',
+            'label' => 'Social Icon ' . $i . ' Tooltip',
             'name' => 'social_' . $i . '_tooltip',
             'type' => 'text',
             'default_value' => '',
         );
     }
+    $fields[] = array(
+        'key' => 'field_ss_footer_social_accordion_end',
+        'label' => 'Follow Us Section End',
+        'name' => '',
+        'type' => 'accordion',
+        'endpoint' => 1,
+    );
 
     // Newsletter: visibility, title, subtitle, etc. are in the "Footer Newsletter" group below (ACF Free compatible).
 
     // Copyright
     $fields[] = array(
         'key' => 'field_ss_footer_copyright_enabled',
-        'label' => 'footer_copyright_enabled',
+        'label' => 'Enable Copyright Row',
         'name' => 'footer_copyright_enabled',
         'type' => 'true_false',
         'ui' => 1,
         'default_value' => 1,
+        'ui_on_text' => 'Enabled',
+        'ui_off_text' => 'Disabled',
     );
     $fields[] = array(
         'key' => 'field_ss_footer_copyright_text',
-        'label' => 'footer_copyright_text',
+        'label' => 'Copyright Text',
         'name' => 'footer_copyright_text',
         'type' => 'text',
         'instructions' => 'You can use {year} and {site}. Example: © {year} {site}. All rights reserved.',
