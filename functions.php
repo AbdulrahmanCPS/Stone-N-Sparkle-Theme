@@ -1712,6 +1712,11 @@ require_once get_template_directory() . '/inc/private-view-request.php';
 require_once get_template_directory() . '/inc/woocommerce-uae-checkout-shipping.php';
 
 /**
+ * Bulk variation pricing: product data tab for attribute-filtered price updates.
+ */
+require_once get_template_directory() . '/inc/product-variation-bulk-pricing.php';
+
+/**
  * Variable product: output "Clear" beside the variation price row.
  *
  * @return void
