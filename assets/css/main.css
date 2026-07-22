@@ -3521,6 +3521,22 @@ body.single-product .woocommerce div.product,
 .single-product .woocommerce-product-details__short-description p:last-child,
 .single-product div.summary .woocommerce-product-details__short-description p:last-child{ margin-bottom: 0; }
 
+/* Lists inside short description: centered block, left-aligned bullets */
+.single-product .woocommerce-product-details__short-description ul,
+.single-product .woocommerce-product-details__short-description ol,
+.single-product div.summary .woocommerce-product-details__short-description ul,
+.single-product div.summary .woocommerce-product-details__short-description ol{
+  display: inline-block;
+  text-align: left;
+  margin: 0.5em 0 0;
+  padding-left: 1.25em;
+  list-style-position: outside;
+}
+.single-product .woocommerce-product-details__short-description li + li,
+.single-product div.summary .woocommerce-product-details__short-description li + li{
+  margin-top: 0.35em;
+}
+
 /* --------------- Variation selectors: cylinder style (Size, Gold Color, Stone Type, any future attributes) --------------- */
 /* Align variations with title/price: one vertical content line, no float/table offset */
 body.single-product .woocommerce form.variations_form,
