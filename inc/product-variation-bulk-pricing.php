@@ -11,6 +11,16 @@ defined('ABSPATH') || exit;
 define('SS_BULK_PRICING_ANY_SENTINEL', '__any__');
 
 /**
+ * Normalize an attribute key for consistent meta / parent lookups.
+ *
+ * @param string $key Attribute key.
+ * @return string
+ */
+function ss_bulk_variation_pricing_normalize_attribute_key($key) {
+    return sanitize_title((string) $key);
+}
+
+/**
  * Register the Bulk pricing tab on variable products.
  *
  * @param array<string, array<string, mixed>> $tabs Product data tabs.
@@ -105,7 +115,9 @@ function ss_bulk_variation_pricing_get_variation_rows($product) {
             continue;
         }
 
-        $attribute_name = substr($meta_key, strlen('attribute_'));
+        $attribute_name = ss_bulk_variation_pricing_normalize_attribute_key(
+            substr($meta_key, strlen('attribute_'))
+        );
         if ($attribute_name === '') {
             continue;
         }
@@ -119,12 +131,39 @@ function ss_bulk_variation_pricing_get_variation_rows($product) {
 }
 
 /**
- * Build checkbox options from actual variation attribute values.
+ * Read an attribute value from a variation row using a normalized key.
  *
- * Empty ("Any") values become the SS_BULK_PRICING_ANY_SENTINEL option.
+ * @param array<string, string> $attributes Variation attribute map.
+ * @param string                $attribute_name Attribute key.
+ * @return string
+ */
+function ss_bulk_variation_pricing_row_attribute_value($attributes, $attribute_name) {
+    $norm = ss_bulk_variation_pricing_normalize_attribute_key($attribute_name);
+
+    if (array_key_exists($norm, $attributes)) {
+        return (string) $attributes[$norm];
+    }
+
+    if (array_key_exists($attribute_name, $attributes)) {
+        return (string) $attributes[$attribute_name];
+    }
+
+    foreach ($attributes as $key => $value) {
+        if (ss_bulk_variation_pricing_normalize_attribute_key((string) $key) === $norm) {
+            return (string) $value;
+        }
+    }
+
+    return '';
+}
+
+/**
+ * Build checkbox options from parent attribute terms unioned with variation-row values.
+ *
+ * Empty ("Any") variation meta adds the SS_BULK_PRICING_ANY_SENTINEL option at the end.
  *
  * @param WC_Product_Variable $product Variable product.
- * @return array<string, string[]> Attribute key => list of stored option values.
+ * @return array<string, string[]> Attribute key => list of option values.
  */
 function ss_bulk_variation_pricing_build_options($product) {
     $attribute_keys = [];
@@ -136,16 +175,16 @@ function ss_bulk_variation_pricing_build_options($product) {
 
         $name = $attribute->get_name();
         if ($name !== '') {
-            $attribute_keys[] = $name;
+            $attribute_keys[] = ss_bulk_variation_pricing_normalize_attribute_key($name);
         }
     }
 
+    $rows = ss_bulk_variation_pricing_get_variation_rows($product);
+
     if (empty($attribute_keys)) {
-        // Fallback: keys seen on variation rows.
-        $rows = ss_bulk_variation_pricing_get_variation_rows($product);
         foreach ($rows as $attrs) {
             foreach (array_keys($attrs) as $key) {
-                $attribute_keys[] = $key;
+                $attribute_keys[] = ss_bulk_variation_pricing_normalize_attribute_key((string) $key);
             }
         }
         $attribute_keys = array_values(array_unique($attribute_keys));
@@ -155,33 +194,56 @@ function ss_bulk_variation_pricing_build_options($product) {
         return [];
     }
 
-    $rows    = ss_bulk_variation_pricing_get_variation_rows($product);
+    $parent_attributes = [];
+    foreach ((array) $product->get_variation_attributes() as $parent_key => $parent_values) {
+        $parent_attributes[ss_bulk_variation_pricing_normalize_attribute_key((string) $parent_key)] = (array) $parent_values;
+    }
+
     $options = [];
 
     foreach ($attribute_keys as $attribute_name) {
-        $options[$attribute_name] = [];
-        $seen                     = [];
+        $values = [];
+        $seen   = [];
+
+        if (!empty($parent_attributes[$attribute_name])) {
+            foreach ($parent_attributes[$attribute_name] as $parent_value) {
+                $parent_value = (string) $parent_value;
+                if ($parent_value === '' || isset($seen[$parent_value])) {
+                    continue;
+                }
+                $seen[$parent_value] = true;
+                $values[]            = $parent_value;
+            }
+        }
+
+        $has_any = false;
 
         foreach ($rows as $attrs) {
-            $raw = array_key_exists($attribute_name, $attrs)
-                ? (string) $attrs[$attribute_name]
-                : '';
+            $raw = ss_bulk_variation_pricing_row_attribute_value($attrs, $attribute_name);
 
-            $value = ($raw === '') ? SS_BULK_PRICING_ANY_SENTINEL : $raw;
-
-            if (isset($seen[$value])) {
+            if ($raw === '') {
+                $has_any = true;
                 continue;
             }
 
-            $seen[$value]                 = true;
-            $options[$attribute_name][] = $value;
+            if (isset($seen[$raw])) {
+                continue;
+            }
+
+            $seen[$raw] = true;
+            $values[]   = $raw;
+        }
+
+        if ($has_any) {
+            $values[] = SS_BULK_PRICING_ANY_SENTINEL;
+        }
+
+        if (!empty($values)) {
+            $options[$attribute_name] = $values;
         }
     }
 
-    // Drop attributes with no values at all (no variations).
-    return array_filter($options, static function ($values) {
-        return !empty($values);
-    });
+    return $options;
 }
 
 /**
@@ -424,14 +486,14 @@ function ss_bulk_variation_pricing_admin_assets($hook_suffix) {
         'ss-bulk-variation-pricing-admin',
         get_template_directory_uri() . '/assets/css/admin-product-variation-bulk-pricing.css',
         [],
-        '1.0.5'
+        '1.0.6'
     );
 
     wp_enqueue_script(
         'ss-bulk-variation-pricing-admin',
         get_template_directory_uri() . '/assets/js/admin-product-variation-bulk-pricing.js',
         ['jquery'],
-        '1.0.5',
+        '1.0.6',
         true
     );
 
@@ -475,7 +537,7 @@ function ss_bulk_variation_pricing_parse_filters($raw) {
     $filters = [];
 
     foreach ($raw as $attribute_name => $values) {
-        $attribute_name = wc_clean((string) $attribute_name);
+        $attribute_name = ss_bulk_variation_pricing_normalize_attribute_key(wc_clean((string) $attribute_name));
         if ($attribute_name === '') {
             continue;
         }
@@ -507,7 +569,7 @@ function ss_bulk_variation_pricing_parse_filters($raw) {
 }
 
 /**
- * Merge posted filters with options derived from variation rows.
+ * Merge posted filters with options derived from parent terms + variation rows.
  *
  * @param WC_Product_Variable  $product Variable product.
  * @param array<string, mixed> $raw     Raw attribute map from the request.
@@ -527,6 +589,13 @@ function ss_bulk_variation_pricing_resolve_filters($product, $raw) {
     $resolved = [];
 
     foreach ($built_options as $attribute_name => $options) {
+        $norm = ss_bulk_variation_pricing_normalize_attribute_key($attribute_name);
+
+        if (isset($parsed[$norm]) && !empty($parsed[$norm])) {
+            $resolved[$attribute_name] = $parsed[$norm];
+            continue;
+        }
+
         if (isset($parsed[$attribute_name]) && !empty($parsed[$attribute_name])) {
             $resolved[$attribute_name] = $parsed[$attribute_name];
             continue;
@@ -539,20 +608,74 @@ function ss_bulk_variation_pricing_resolve_filters($product, $raw) {
 }
 
 /**
+ * Whether every specific (non-Any) option is included in the selected values.
+ *
+ * @param string[] $all_options    Full option list for the attribute.
+ * @param string[] $allowed_values Selected values.
+ * @return bool
+ */
+function ss_bulk_variation_pricing_all_specific_selected($all_options, $allowed_values) {
+    $specific = [];
+    foreach ((array) $all_options as $option) {
+        $option = (string) $option;
+        if ($option !== '' && $option !== SS_BULK_PRICING_ANY_SENTINEL) {
+            $specific[] = $option;
+        }
+    }
+
+    if (empty($specific)) {
+        return false;
+    }
+
+    foreach ($specific as $option) {
+        $found = false;
+        foreach ((array) $allowed_values as $allowed_value) {
+            $allowed_value = (string) $allowed_value;
+            if ($allowed_value === '' || $allowed_value === SS_BULK_PRICING_ANY_SENTINEL) {
+                continue;
+            }
+            if ($option === $allowed_value) {
+                $found = true;
+                break;
+            }
+            if (function_exists('wc_strtolower') && wc_strtolower($option) === wc_strtolower($allowed_value)) {
+                $found = true;
+                break;
+            }
+            if (sanitize_title($option) === sanitize_title($allowed_value)) {
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
  * Compare a stored variation value against admin-selected options.
  *
- * Empty stored values match only when the Any sentinel is selected.
+ * Empty stored values match when Any is selected, or when every specific
+ * option for that attribute is selected.
  *
  * @param string   $variation_value Stored variation attribute value.
  * @param string[] $allowed_values  Selected option values from the admin UI.
+ * @param string[] $all_options     Full option list for the attribute.
  * @return bool
  */
-function ss_bulk_variation_pricing_value_matches($variation_value, $allowed_values) {
+function ss_bulk_variation_pricing_value_matches($variation_value, $allowed_values, $all_options = []) {
     $variation_value = is_string($variation_value) ? $variation_value : (string) $variation_value;
 
     // "Any" attribute on the variation (empty meta).
     if ($variation_value === '') {
-        return in_array(SS_BULK_PRICING_ANY_SENTINEL, $allowed_values, true);
+        if (in_array(SS_BULK_PRICING_ANY_SENTINEL, $allowed_values, true)) {
+            return true;
+        }
+
+        return ss_bulk_variation_pricing_all_specific_selected($all_options, $allowed_values);
     }
 
     $variation_value = wc_clean($variation_value);
@@ -582,17 +705,24 @@ function ss_bulk_variation_pricing_value_matches($variation_value, $allowed_valu
 /**
  * Determine whether a variation attribute map matches the selected filters.
  *
- * @param array<string, string>   $attributes Variation attribute map.
- * @param array<string, string[]> $filters    Selected attribute values.
+ * @param array<string, string>   $attributes    Variation attribute map.
+ * @param array<string, string[]> $filters       Selected attribute values.
+ * @param array<string, string[]> $built_options Full option lists per attribute.
  * @return bool
  */
-function ss_bulk_variation_pricing_row_matches($attributes, $filters) {
+function ss_bulk_variation_pricing_row_matches($attributes, $filters, $built_options = []) {
     foreach ($filters as $attribute_name => $allowed_values) {
-        $variation_value = array_key_exists($attribute_name, $attributes)
-            ? (string) $attributes[$attribute_name]
-            : '';
+        $variation_value = ss_bulk_variation_pricing_row_attribute_value($attributes, $attribute_name);
+        $norm            = ss_bulk_variation_pricing_normalize_attribute_key($attribute_name);
+        $all_options     = [];
 
-        if (!ss_bulk_variation_pricing_value_matches($variation_value, $allowed_values)) {
+        if (isset($built_options[$attribute_name])) {
+            $all_options = (array) $built_options[$attribute_name];
+        } elseif (isset($built_options[$norm])) {
+            $all_options = (array) $built_options[$norm];
+        }
+
+        if (!ss_bulk_variation_pricing_value_matches($variation_value, $allowed_values, $all_options)) {
             return false;
         }
     }
@@ -608,10 +738,11 @@ function ss_bulk_variation_pricing_row_matches($attributes, $filters) {
  * @return int[]
  */
 function ss_bulk_variation_pricing_matching_variation_ids($product, $filters) {
-    $matching_ids = [];
+    $matching_ids  = [];
+    $built_options = ss_bulk_variation_pricing_build_options($product);
 
     foreach (ss_bulk_variation_pricing_get_variation_rows($product) as $variation_id => $attributes) {
-        if (ss_bulk_variation_pricing_row_matches($attributes, $filters)) {
+        if (ss_bulk_variation_pricing_row_matches($attributes, $filters, $built_options)) {
             $matching_ids[] = (int) $variation_id;
         }
     }
