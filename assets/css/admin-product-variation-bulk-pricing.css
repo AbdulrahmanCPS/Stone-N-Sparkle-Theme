@@ -247,6 +247,23 @@
   box-shadow: inset 0 0 0 1px rgba(34, 113, 177, 0.08);
 }
 
+#ss_bulk_pricing_panel .ss-bulk-pricing__option--any {
+  border-style: dashed;
+  border-color: #c3c4c7;
+  background: #fbfbfc;
+}
+
+#ss_bulk_pricing_panel .ss-bulk-pricing__option--any .ss-bulk-pricing__option-text {
+  font-style: italic;
+  color: #50575e;
+}
+
+#ss_bulk_pricing_panel .ss-bulk-pricing__option--any:has(input:checked) {
+  border-color: #8c8f94;
+  background: #f0f0f1;
+  box-shadow: none;
+}
+
 #ss_bulk_pricing_panel .ss-bulk-pricing__option.is-hidden {
   display: none;
 }
@@ -361,4 +378,8 @@
 
 #ss_bulk_pricing_panel .ss-bulk-pricing__result.is-error {
   color: #b32d2e;
+}
+
+#ss_bulk_pricing_panel .ss-bulk-pricing__result.is-hint {
+  color: #996800;
 }

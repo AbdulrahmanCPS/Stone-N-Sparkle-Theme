@@ -7,6 +7,9 @@
 
 defined('ABSPATH') || exit;
 
+/** Sentinel value for variations with an empty ("Any") attribute. */
+define('SS_BULK_PRICING_ANY_SENTINEL', '__any__');
+
 /**
  * Register the Bulk pricing tab on variable products.
  *
@@ -26,6 +29,189 @@ function ss_bulk_variation_pricing_product_data_tab($tabs) {
 add_filter('woocommerce_product_data_tabs', 'ss_bulk_variation_pricing_product_data_tab');
 
 /**
+ * Collect variation IDs for a variable product, with a direct query fallback.
+ *
+ * @param WC_Product_Variable $product Variable product.
+ * @return int[]
+ */
+function ss_bulk_variation_pricing_get_variation_ids($product) {
+    $ids = array_map('absint', (array) $product->get_children());
+    $ids = array_values(array_filter($ids));
+
+    if (!empty($ids)) {
+        return $ids;
+    }
+
+    $fallback = get_posts([
+        'post_parent'    => $product->get_id(),
+        'post_type'      => 'product_variation',
+        'post_status'    => ['publish', 'private'],
+        'numberposts'    => -1,
+        'fields'         => 'ids',
+        'orderby'        => 'menu_order ID',
+        'order'          => 'ASC',
+        'suppress_filters' => true,
+    ]);
+
+    return array_values(array_map('absint', (array) $fallback));
+}
+
+/**
+ * Load attribute_* meta for all variations of a product in one query.
+ *
+ * @param WC_Product_Variable $product Variable product.
+ * @return array<int, array<string, string>> Variation ID => [ attribute_key => value ].
+ */
+function ss_bulk_variation_pricing_get_variation_rows($product) {
+    global $wpdb;
+
+    $variation_ids = ss_bulk_variation_pricing_get_variation_ids($product);
+    if (empty($variation_ids)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($variation_ids), '%d'));
+    $like         = $wpdb->esc_like('attribute_') . '%';
+    $query        = "SELECT post_id, meta_key, meta_value
+         FROM {$wpdb->postmeta}
+         WHERE post_id IN ({$placeholders})
+           AND meta_key LIKE %s";
+    $args         = array_merge($variation_ids, [$like]);
+
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- dynamic IN list.
+    $sql = call_user_func_array([$wpdb, 'prepare'], array_merge([$query], $args));
+
+    if (!is_string($sql) || $sql === '') {
+        return [];
+    }
+
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- prepared above.
+    $results = $wpdb->get_results($sql, ARRAY_A);
+    $rows    = [];
+
+    foreach ($variation_ids as $variation_id) {
+        $rows[(int) $variation_id] = [];
+    }
+
+    if (!is_array($results)) {
+        return $rows;
+    }
+
+    foreach ($results as $row) {
+        $variation_id = isset($row['post_id']) ? (int) $row['post_id'] : 0;
+        $meta_key     = isset($row['meta_key']) ? (string) $row['meta_key'] : '';
+
+        if ($variation_id <= 0 || strpos($meta_key, 'attribute_') !== 0) {
+            continue;
+        }
+
+        $attribute_name = substr($meta_key, strlen('attribute_'));
+        if ($attribute_name === '') {
+            continue;
+        }
+
+        $rows[$variation_id][$attribute_name] = is_string($row['meta_value'] ?? null)
+            ? (string) $row['meta_value']
+            : '';
+    }
+
+    return $rows;
+}
+
+/**
+ * Build checkbox options from actual variation attribute values.
+ *
+ * Empty ("Any") values become the SS_BULK_PRICING_ANY_SENTINEL option.
+ *
+ * @param WC_Product_Variable $product Variable product.
+ * @return array<string, string[]> Attribute key => list of stored option values.
+ */
+function ss_bulk_variation_pricing_build_options($product) {
+    $attribute_keys = [];
+
+    foreach ($product->get_attributes() as $attribute) {
+        if (!$attribute instanceof WC_Product_Attribute || !$attribute->get_variation()) {
+            continue;
+        }
+
+        $name = $attribute->get_name();
+        if ($name !== '') {
+            $attribute_keys[] = $name;
+        }
+    }
+
+    if (empty($attribute_keys)) {
+        // Fallback: keys seen on variation rows.
+        $rows = ss_bulk_variation_pricing_get_variation_rows($product);
+        foreach ($rows as $attrs) {
+            foreach (array_keys($attrs) as $key) {
+                $attribute_keys[] = $key;
+            }
+        }
+        $attribute_keys = array_values(array_unique($attribute_keys));
+    }
+
+    if (empty($attribute_keys)) {
+        return [];
+    }
+
+    $rows    = ss_bulk_variation_pricing_get_variation_rows($product);
+    $options = [];
+
+    foreach ($attribute_keys as $attribute_name) {
+        $options[$attribute_name] = [];
+        $seen                     = [];
+
+        foreach ($rows as $attrs) {
+            $raw = array_key_exists($attribute_name, $attrs)
+                ? (string) $attrs[$attribute_name]
+                : '';
+
+            $value = ($raw === '') ? SS_BULK_PRICING_ANY_SENTINEL : $raw;
+
+            if (isset($seen[$value])) {
+                continue;
+            }
+
+            $seen[$value]                 = true;
+            $options[$attribute_name][] = $value;
+        }
+    }
+
+    // Drop attributes with no values at all (no variations).
+    return array_filter($options, static function ($values) {
+        return !empty($values);
+    });
+}
+
+/**
+ * Human-readable label for a variation attribute option value.
+ *
+ * @param string $attribute_name Attribute key.
+ * @param string $option_value   Option value (slug, label, or Any sentinel).
+ * @return string
+ */
+function ss_bulk_variation_pricing_option_label($attribute_name, $option_value) {
+    if ($option_value === SS_BULK_PRICING_ANY_SENTINEL) {
+        $label = wc_attribute_label($attribute_name);
+        return sprintf(
+            /* translators: %s: attribute name */
+            __('Any %s', 'stone-sparkle'),
+            $label !== '' ? $label : $attribute_name
+        );
+    }
+
+    if (taxonomy_exists($attribute_name)) {
+        $term = get_term_by('slug', $option_value, $attribute_name);
+        if ($term && !is_wp_error($term)) {
+            return $term->name;
+        }
+    }
+
+    return $option_value;
+}
+
+/**
  * Render the Bulk pricing panel inside Product data.
  *
  * @return void
@@ -42,8 +228,8 @@ function ss_bulk_variation_pricing_product_data_panel() {
         return;
     }
 
-    $variation_attributes = $product->get_variation_attributes();
-    if (empty($variation_attributes)) {
+    $built_options = ss_bulk_variation_pricing_build_options($product);
+    if (empty($built_options)) {
         ?>
         <div id="ss_bulk_pricing_panel" class="panel woocommerce_options_panel hidden">
             <p class="ss-bulk-pricing__empty">
@@ -54,29 +240,33 @@ function ss_bulk_variation_pricing_product_data_panel() {
         return;
     }
 
+    $total_variations = count(ss_bulk_variation_pricing_get_variation_ids($product));
+
     wp_nonce_field('ss_bulk_variation_pricing', 'ss_bulk_variation_pricing_nonce');
     ?>
     <div id="ss_bulk_pricing_panel" class="panel woocommerce_options_panel hidden">
-        <div class="ss-bulk-pricing" data-product-id="<?php echo esc_attr((string) $product->get_id()); ?>">
+        <div
+            class="ss-bulk-pricing"
+            data-product-id="<?php echo esc_attr((string) $product->get_id()); ?>"
+            data-total-variations="<?php echo esc_attr((string) $total_variations); ?>"
+        >
             <p class="ss-bulk-pricing__intro">
                 <?php esc_html_e('Select which attribute options should receive the prices below, then click Apply. All options are selected by default — uncheck any you want to exclude.', 'stone-sparkle'); ?>
             </p>
 
-            <?php foreach ($variation_attributes as $attribute_name => $options) : ?>
+            <?php foreach ($built_options as $attribute_name => $options) : ?>
                 <?php
                 $attribute_label = wc_attribute_label($attribute_name, $product);
                 $field_id        = 'ss-bulk-pricing-' . sanitize_title($attribute_name);
                 $option_count    = count((array) $options);
                 $is_large        = $option_count > 12;
+                $body_id         = $field_id . '-body';
                 ?>
                 <fieldset
                     class="ss-bulk-pricing__attribute<?php echo $is_large ? ' ss-bulk-pricing__attribute--large is-collapsed' : ' is-expanded'; ?>"
                     data-attribute="<?php echo esc_attr($attribute_name); ?>"
                     data-option-count="<?php echo esc_attr((string) $option_count); ?>"
                 >
-                    <?php
-                    $body_id = $field_id . '-body';
-                    ?>
                     <div class="ss-bulk-pricing__attribute-header">
                         <button
                             type="button"
@@ -127,15 +317,16 @@ function ss_bulk_variation_pricing_product_data_panel() {
 
                     <div class="ss-bulk-pricing__options-wrap">
                         <div class="ss-bulk-pricing__options">
-                            <?php foreach ($options as $option_slug) : ?>
+                            <?php foreach ($options as $option_value) : ?>
                                 <?php
-                                $option_slug = (string) $option_slug;
-                                $option_name = ss_bulk_variation_pricing_option_label($attribute_name, $option_slug);
-                                $input_id    = $field_id . '-' . sanitize_title($option_slug);
-                                $search_label = function_exists('wc_strtolower') ? wc_strtolower($option_name) : strtolower($option_name);
+                                $option_value  = (string) $option_value;
+                                $option_name   = ss_bulk_variation_pricing_option_label($attribute_name, $option_value);
+                                $input_id      = $field_id . '-' . sanitize_title($option_value);
+                                $search_label  = function_exists('wc_strtolower') ? wc_strtolower($option_name) : strtolower($option_name);
+                                $is_any_option = ($option_value === SS_BULK_PRICING_ANY_SENTINEL);
                                 ?>
                                 <label
-                                    class="ss-bulk-pricing__option"
+                                    class="ss-bulk-pricing__option<?php echo $is_any_option ? ' ss-bulk-pricing__option--any' : ''; ?>"
                                     for="<?php echo esc_attr($input_id); ?>"
                                     data-option-label="<?php echo esc_attr($search_label); ?>"
                                 >
@@ -143,7 +334,7 @@ function ss_bulk_variation_pricing_product_data_panel() {
                                         type="checkbox"
                                         id="<?php echo esc_attr($input_id); ?>"
                                         name="ss_bulk_pricing[<?php echo esc_attr($attribute_name); ?>][]"
-                                        value="<?php echo esc_attr($option_slug); ?>"
+                                        value="<?php echo esc_attr($option_value); ?>"
                                         checked
                                     >
                                     <span class="ss-bulk-pricing__option-text"><?php echo esc_html($option_name); ?></span>
@@ -206,24 +397,6 @@ function ss_bulk_variation_pricing_product_data_panel() {
 add_action('woocommerce_product_data_panels', 'ss_bulk_variation_pricing_product_data_panel');
 
 /**
- * Human-readable label for a variation attribute option slug.
- *
- * @param string $attribute_name Attribute key.
- * @param string $option_slug    Option slug.
- * @return string
- */
-function ss_bulk_variation_pricing_option_label($attribute_name, $option_slug) {
-    if (taxonomy_exists($attribute_name)) {
-        $term = get_term_by('slug', $option_slug, $attribute_name);
-        if ($term && !is_wp_error($term)) {
-            return $term->name;
-        }
-    }
-
-    return $option_slug;
-}
-
-/**
  * Enqueue admin assets on the product edit screen.
  *
  * @param string $hook_suffix Current admin page hook.
@@ -251,14 +424,14 @@ function ss_bulk_variation_pricing_admin_assets($hook_suffix) {
         'ss-bulk-variation-pricing-admin',
         get_template_directory_uri() . '/assets/css/admin-product-variation-bulk-pricing.css',
         [],
-        '1.0.4'
+        '1.0.5'
     );
 
     wp_enqueue_script(
         'ss-bulk-variation-pricing-admin',
         get_template_directory_uri() . '/assets/js/admin-product-variation-bulk-pricing.js',
         ['jquery'],
-        '1.0.4',
+        '1.0.5',
         true
     );
 
@@ -269,15 +442,18 @@ function ss_bulk_variation_pricing_admin_assets($hook_suffix) {
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce'   => wp_create_nonce('ss_bulk_variation_pricing'),
             'i18n'    => [
-                'previewSingular' => __('1 variation will be updated.', 'stone-sparkle'),
-                'previewPlural'   => __('%d variations will be updated.', 'stone-sparkle'),
-                'applySuccess'    => __('Updated %d variation(s).', 'stone-sparkle'),
-                'applyError'      => __('Could not update variations. Please try again.', 'stone-sparkle'),
-                'validationError' => __('Select at least one option for every attribute.', 'stone-sparkle'),
-                'regularRequired' => __('Enter a regular price before applying.', 'stone-sparkle'),
-                'selectedCount'   => __('%1$d of %2$d selected', 'stone-sparkle'),
-                'expandAttribute' => __('Expand attribute options', 'stone-sparkle'),
+                'previewSingular'   => __('1 variation will be updated.', 'stone-sparkle'),
+                'previewPlural'     => __('%d variations will be updated.', 'stone-sparkle'),
+                'previewOfTotal'    => __('%1$d of %2$d variations will be updated.', 'stone-sparkle'),
+                'applySuccess'      => __('Updated %d variation(s).', 'stone-sparkle'),
+                'applyError'        => __('Could not update variations. Please try again.', 'stone-sparkle'),
+                'validationError'   => __('Select at least one option for every attribute.', 'stone-sparkle'),
+                'regularRequired'   => __('Enter a regular price before applying.', 'stone-sparkle'),
+                'selectedCount'     => __('%1$d of %2$d selected', 'stone-sparkle'),
+                'expandAttribute'   => __('Expand attribute options', 'stone-sparkle'),
                 'collapseAttribute' => __('Collapse attribute options', 'stone-sparkle'),
+                'ajaxFail'          => __('Preview request failed (HTTP %d). Check the browser console or try again.', 'stone-sparkle'),
+                'zeroMatchHint'     => __('No variations match the selected options. Open the Variations tab to confirm each variation has the expected attribute values.', 'stone-sparkle'),
             ],
             'largeOptionsThreshold' => 12,
         ]
@@ -331,10 +507,10 @@ function ss_bulk_variation_pricing_parse_filters($raw) {
 }
 
 /**
- * Merge posted filters with the product's variation attributes.
+ * Merge posted filters with options derived from variation rows.
  *
- * @param WC_Product_Variable      $product Variable product.
- * @param array<string, mixed>     $raw     Raw attribute map from the request.
+ * @param WC_Product_Variable  $product Variable product.
+ * @param array<string, mixed> $raw     Raw attribute map from the request.
  * @return array<string, string[]>|WP_Error
  */
 function ss_bulk_variation_pricing_resolve_filters($product, $raw) {
@@ -343,14 +519,14 @@ function ss_bulk_variation_pricing_resolve_filters($product, $raw) {
         return $parsed;
     }
 
-    $variation_attributes = $product->get_variation_attributes();
-    if (empty($variation_attributes)) {
+    $built_options = ss_bulk_variation_pricing_build_options($product);
+    if (empty($built_options)) {
         return new WP_Error('ss_bulk_pricing_no_attributes', __('No variation attributes found for this product.', 'stone-sparkle'));
     }
 
     $resolved = [];
 
-    foreach ($variation_attributes as $attribute_name => $options) {
+    foreach ($built_options as $attribute_name => $options) {
         if (isset($parsed[$attribute_name]) && !empty($parsed[$attribute_name])) {
             $resolved[$attribute_name] = $parsed[$attribute_name];
             continue;
@@ -363,43 +539,27 @@ function ss_bulk_variation_pricing_resolve_filters($product, $raw) {
 }
 
 /**
- * Resolve a variation attribute value by attribute key.
- *
- * @param WC_Product_Variation $variation       Variation product.
- * @param string               $attribute_name  Attribute key from the parent product.
- * @return string
- */
-function ss_bulk_variation_pricing_get_variation_attribute_value($variation, $attribute_name) {
-    $attributes = $variation->get_attributes();
-
-    if (isset($attributes[$attribute_name])) {
-        return (string) $attributes[$attribute_name];
-    }
-
-    $meta_key = 'attribute_' . $attribute_name;
-    $meta_value = $variation->get_meta($meta_key, true);
-
-    return is_string($meta_value) ? $meta_value : '';
-}
-
-/**
  * Compare a stored variation value against admin-selected options.
  *
- * Custom attributes keep their exact label (e.g. "test 2"); taxonomy terms use slugs.
+ * Empty stored values match only when the Any sentinel is selected.
  *
  * @param string   $variation_value Stored variation attribute value.
  * @param string[] $allowed_values  Selected option values from the admin UI.
  * @return bool
  */
 function ss_bulk_variation_pricing_value_matches($variation_value, $allowed_values) {
-    $variation_value = wc_clean((string) $variation_value);
+    $variation_value = is_string($variation_value) ? $variation_value : (string) $variation_value;
+
+    // "Any" attribute on the variation (empty meta).
     if ($variation_value === '') {
-        return false;
+        return in_array(SS_BULK_PRICING_ANY_SENTINEL, $allowed_values, true);
     }
+
+    $variation_value = wc_clean($variation_value);
 
     foreach ($allowed_values as $allowed_value) {
         $allowed_value = wc_clean((string) $allowed_value);
-        if ($allowed_value === '') {
+        if ($allowed_value === '' || $allowed_value === SS_BULK_PRICING_ANY_SENTINEL) {
             continue;
         }
 
@@ -420,15 +580,17 @@ function ss_bulk_variation_pricing_value_matches($variation_value, $allowed_valu
 }
 
 /**
- * Determine whether a variation matches the selected attribute filters.
+ * Determine whether a variation attribute map matches the selected filters.
  *
- * @param WC_Product_Variation   $variation Variation product.
- * @param array<string, string[]> $filters   Selected attribute values.
+ * @param array<string, string>   $attributes Variation attribute map.
+ * @param array<string, string[]> $filters    Selected attribute values.
  * @return bool
  */
-function ss_bulk_variation_pricing_variation_matches($variation, $filters) {
+function ss_bulk_variation_pricing_row_matches($attributes, $filters) {
     foreach ($filters as $attribute_name => $allowed_values) {
-        $variation_value = ss_bulk_variation_pricing_get_variation_attribute_value($variation, $attribute_name);
+        $variation_value = array_key_exists($attribute_name, $attributes)
+            ? (string) $attributes[$attribute_name]
+            : '';
 
         if (!ss_bulk_variation_pricing_value_matches($variation_value, $allowed_values)) {
             return false;
@@ -441,20 +603,15 @@ function ss_bulk_variation_pricing_variation_matches($variation, $filters) {
 /**
  * Collect variation IDs that match the selected filters.
  *
- * @param WC_Product_Variable    $product Variable product.
- * @param array<string, string[]> $filters Selected attribute slugs.
+ * @param WC_Product_Variable     $product Variable product.
+ * @param array<string, string[]> $filters Selected attribute values.
  * @return int[]
  */
 function ss_bulk_variation_pricing_matching_variation_ids($product, $filters) {
     $matching_ids = [];
 
-    foreach ($product->get_children() as $variation_id) {
-        $variation = wc_get_product($variation_id);
-        if (!$variation || !$variation->is_type('variation')) {
-            continue;
-        }
-
-        if (ss_bulk_variation_pricing_variation_matches($variation, $filters)) {
+    foreach (ss_bulk_variation_pricing_get_variation_rows($product) as $variation_id => $attributes) {
+        if (ss_bulk_variation_pricing_row_matches($attributes, $filters)) {
             $matching_ids[] = (int) $variation_id;
         }
     }
@@ -501,9 +658,13 @@ function ss_bulk_variation_pricing_ajax_preview() {
         wp_send_json_error(['message' => $filters->get_error_message()]);
     }
 
+    $total = count(ss_bulk_variation_pricing_get_variation_ids($product));
     $count = count(ss_bulk_variation_pricing_matching_variation_ids($product, $filters));
 
-    wp_send_json_success(['count' => $count]);
+    wp_send_json_success([
+        'count' => $count,
+        'total' => $total,
+    ]);
 }
 add_action('wp_ajax_ss_bulk_variation_price_preview', 'ss_bulk_variation_pricing_ajax_preview');
 
