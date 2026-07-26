@@ -13,6 +13,10 @@
     return parseInt($root.data('product-id'), 10) || 0;
   }
 
+  function getTotalVariations($root) {
+    return parseInt($root.data('total-variations'), 10) || 0;
+  }
+
   function formatSelectedCount(selected, total) {
     var template = config.i18n && config.i18n.selectedCount
       ? config.i18n.selectedCount
@@ -80,11 +84,16 @@
     };
   }
 
-  function updatePreviewText($root, count) {
+  function updatePreviewText($root, count, total) {
     var $preview = $root.find('.ss-bulk-pricing__preview');
+    var resolvedTotal = typeof total === 'number' ? total : getTotalVariations($root);
     var text = '';
 
-    if (count === 1) {
+    if (resolvedTotal > 0 && config.i18n && config.i18n.previewOfTotal) {
+      text = config.i18n.previewOfTotal
+        .replace('%1$d', String(count))
+        .replace('%2$d', String(resolvedTotal));
+    } else if (count === 1) {
       text = config.i18n && config.i18n.previewSingular ? config.i18n.previewSingular : '1 variation will be updated.';
     } else if (config.i18n && config.i18n.previewPlural) {
       text = config.i18n.previewPlural.replace('%d', String(count));
@@ -103,21 +112,30 @@
   function showResult($root, message, isError) {
     var $result = $root.find('.ss-bulk-pricing__result');
     $result
-      .removeClass('is-error is-success')
+      .removeClass('is-error is-success is-hint')
       .addClass(isError ? 'is-error' : 'is-success')
+      .text(message || '');
+  }
+
+  function showHint($root, message) {
+    var $result = $root.find('.ss-bulk-pricing__result');
+    $result
+      .removeClass('is-error is-success')
+      .addClass('is-hint')
       .text(message || '');
   }
 
   function requestPreview($root) {
     var productId = getProductId($root);
     var collected = collectFilters($root);
+    var total = getTotalVariations($root);
 
     if (!productId) {
       return;
     }
 
     if (!collected.valid) {
-      updatePreviewText($root, 0);
+      updatePreviewText($root, 0, total);
       showResult($root, config.i18n && config.i18n.validationError ? config.i18n.validationError : '', true);
       return;
     }
@@ -132,15 +150,36 @@
     })
       .done(function (response) {
         if (!response || !response.success) {
-          updatePreviewText($root, 0);
+          updatePreviewText($root, 0, total);
           showResult($root, (response && response.data && response.data.message) || '', true);
           return;
         }
 
-        updatePreviewText($root, parseInt(response.data.count, 10) || 0);
+        var count = parseInt(response.data.count, 10) || 0;
+        var responseTotal = parseInt(response.data.total, 10);
+        if (!isNaN(responseTotal) && responseTotal >= 0) {
+          total = responseTotal;
+          $root.attr('data-total-variations', String(total));
+        }
+
+        updatePreviewText($root, count, total);
+
+        if (count === 0 && total > 0) {
+          showHint(
+            $root,
+            config.i18n && config.i18n.zeroMatchHint
+              ? config.i18n.zeroMatchHint
+              : 'No variations match the selected options. Open the Variations tab to confirm each variation has the expected attribute values.'
+          );
+        }
       })
-      .fail(function () {
-        updatePreviewText($root, 0);
+      .fail(function (xhr) {
+        updatePreviewText($root, 0, total);
+        var status = xhr && xhr.status ? xhr.status : 0;
+        var message = config.i18n && config.i18n.ajaxFail
+          ? config.i18n.ajaxFail.replace('%d', String(status))
+          : 'Preview request failed (HTTP ' + status + ').';
+        showResult($root, message, true);
       });
   }
 
@@ -203,8 +242,12 @@
           }
         }
       })
-      .fail(function () {
-        showResult($root, config.i18n && config.i18n.applyError ? config.i18n.applyError : '', true);
+      .fail(function (xhr) {
+        var status = xhr && xhr.status ? xhr.status : 0;
+        var message = config.i18n && config.i18n.ajaxFail
+          ? config.i18n.ajaxFail.replace('%d', String(status))
+          : (config.i18n && config.i18n.applyError ? config.i18n.applyError : '');
+        showResult($root, message, true);
       })
       .always(function () {
         setLoading($root, false);
